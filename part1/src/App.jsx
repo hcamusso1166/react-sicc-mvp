@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-const API_BASE = import.meta.env.VITE_DIRECTUS_URL || 'https://tto.com.ar'
+const API_BASE =
+  import.meta.env.VITE_DIRECTUS_URL ||
+  (import.meta.env.DEV ? '/directus' : 'https://tto.com.ar')
 
 const MENU_ITEMS = [
   'Home',
@@ -13,18 +15,14 @@ const MENU_ITEMS = [
 
 const TABLES = {
   clientes: 'Clientes',
-  sites: 'Sites',
-  requerimientos: 'Requerimiento',
-  proveedores: 'Proveedor',
-  documentos: 'Documentos Requeridos',
+  sites: 'sites',
+  requerimientos: 'requerimiento',
+  proveedores: 'proveedor',
+  documentos: 'DocumentosRequeridos',
 }
 
-const getCountFromAggregate = (payload) => {
-  if (!payload?.data?.length) return 0
-  const aggregate = payload.data[0]?.count
-  if (aggregate?.id != null) return Number(aggregate.id)
-  const firstValue = Object.values(aggregate ?? {})[0]
-  return Number(firstValue ?? 0)
+const getCountFromMeta = (payload) => {
+  return Number(payload?.meta?.filter_count ?? 0)
 }
 
 const getStatusLabel = (value) => {
@@ -52,8 +50,16 @@ const getDocumentSubtitle = (documento) => {
   )
 }
 
- const fetchJSON = async (url) => {
-  const response = await fetch(url)
+const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
+
+const fetchJSON = async (url) => {
+  const response = await fetch(url, {
+    headers: DIRECTUS_TOKEN
+      ? {
+          Authorization: `Bearer ${DIRECTUS_TOKEN}`,
+        }
+      : undefined,
+  })
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`)
   }
@@ -127,7 +133,7 @@ const Dashboard = ({
   error,
 }) => {
   return (
-<div className="dashboard">
+    <div className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-logo">SICC</div>
         <nav className="sidebar-menu">
@@ -239,36 +245,43 @@ const App = () => {
         documentosListResponse,
       ] = await Promise.all([
         fetchJSON(
-          `${API_BASE}/items/${TABLES.clientes}?aggregate[count]=id`,
+          `${API_BASE}/items/${TABLES.clientes}?limit=1&meta=filter_count`,
         ),
-        fetchJSON(`${API_BASE}/items/${TABLES.sites}?aggregate[count]=id`),
+        fetchJSON(`${API_BASE}/items/${TABLES.sites}?limit=1&meta=filter_count`),
         fetchJSON(
-          `${API_BASE}/items/${TABLES.requerimientos}?aggregate[count]=id`,
-        ),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.proveedores}?aggregate[count]=id`,
+          `${API_BASE}/items/${TABLES.requerimientos}?limit=1&meta=filter_count`,
         ),
         fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?aggregate[count]=id&groupBy[]=estado`,
+          `${API_BASE}/items/${TABLES.proveedores}?limit=1&meta=filter_count`,
+        ),
+        fetchJSON(
+          `${API_BASE}/items/${TABLES.documentos}?limit=1&meta=filter_count&groupBy[]=estado`,
         ),
         fetchJSON(
           `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=fecha_vencimiento`,
         ),
       ])
 
-setCounts({
-        clientes: getCountFromAggregate(clientesResponse),
-        sites: getCountFromAggregate(sitesResponse),
-        requerimientos: getCountFromAggregate(requerimientosResponse),
-        proveedores: getCountFromAggregate(proveedoresResponse),
+      setCounts({
+        clientes: getCountFromMeta(clientesResponse),
+        sites: getCountFromMeta(sitesResponse),
+        requerimientos: getCountFromMeta(requerimientosResponse),
+        proveedores: getCountFromMeta(proveedoresResponse),
       })
 
       const grouped = documentosStatusResponse?.data ?? []
-      const statusRows = grouped.map((row, index) => ({
-        label: getStatusLabel(row.estado),
-        value: Number(row?.count?.id ?? 0),
-        color: colors[index % colors.length],
-      }))
+      const statusCounts = grouped.reduce((acc, row) => {
+        const key = row?.estado || 'Sin estado'
+        acc[key] = (acc[key] || 0) + 1
+        return acc
+      }, {})
+      const statusRows = Object.entries(statusCounts).map(
+        ([estado, count], index) => ({
+          label: getStatusLabel(estado),
+          value: Number(count ?? 0),
+          color: colors[index % colors.length],
+        }),
+      )
       setStatusData(
         statusRows.length
           ? statusRows
