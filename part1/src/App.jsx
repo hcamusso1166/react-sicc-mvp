@@ -15,11 +15,15 @@ const MENU_ITEMS = [
 
 const CUSTOMERS_PAGE_SIZE = 6
 
-const TABLES = {
+const DASHBOARD_TABLES = {
   clientes: 'Clientes',
   sites: 'sites',
   requerimientos: 'requerimiento',
   proveedores: 'proveedor',
+  }
+
+const TABLES = {
+  ...DASHBOARD_TABLES,
   documentos: 'DocumentosRequeridos',
 }
 
@@ -33,13 +37,21 @@ const getStatusLabel = (value) => {
 }
 
 const getDocumentTitle = (documento) => {
-  return (
-    documento?.nombre ||
-    documento?.titulo ||
-    documento?.descripcion ||
-    documento?.id ||
-    'Documento'
-  )
+  if (documento?.nombre || documento?.titulo || documento?.descripcion) {
+    return (
+      documento?.nombre ||
+      documento?.titulo ||
+      documento?.descripcion ||
+      'Documento'
+    )
+  }
+  if (documento?.idParametro) {
+    return `Parámetro ${documento.idParametro}`
+  }
+  if (documento?.id) {
+    return `Documento #${documento.id}`
+  }
+  return 'Documento'
 }
 
 const getDocumentSubtitle = (documento) => {
@@ -47,7 +59,7 @@ const getDocumentSubtitle = (documento) => {
     documento?.detalle ||
     documento?.observaciones ||
     documento?.tipo ||
-    documento?.estado ||
+    documento?.status ||
     'Pendiente'
   )
 }
@@ -66,6 +78,11 @@ const fetchJSON = async (url) => {
     throw new Error(`Request failed: ${response.status}`)
   }
   return response.json()
+}
+const fetchTableCount = (table) => {
+  return fetchJSON(
+    `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
+  )
 }
 
 const PieChart = ({ data }) => {
@@ -393,21 +410,15 @@ const App = () => {
         documentosStatusResponse,
         documentosListResponse,
       ] = await Promise.all([
+        fetchTableCount(DASHBOARD_TABLES.clientes),
+        fetchTableCount(DASHBOARD_TABLES.sites),
+        fetchTableCount(DASHBOARD_TABLES.requerimientos),
+        fetchTableCount(DASHBOARD_TABLES.proveedores),
         fetchJSON(
-          `${API_BASE}/items/${TABLES.clientes}?limit=1&meta=filter_count`,
-        ),
-        fetchJSON(`${API_BASE}/items/${TABLES.sites}?limit=1&meta=filter_count`),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.requerimientos}?limit=1&meta=filter_count`,
-        ),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.proveedores}?limit=1&meta=filter_count`,
+          `${API_BASE}/items/${TABLES.documentos}?limit=1&meta=filter_count&groupBy[]=status`,
         ),
         fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?limit=1&meta=filter_count&groupBy[]=estado`,
-        ),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=fecha_vencimiento`,
+          `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
         ),
       ])
 
@@ -420,7 +431,7 @@ const App = () => {
 
       const grouped = documentosStatusResponse?.data ?? []
       const statusCounts = grouped.reduce((acc, row) => {
-        const key = row?.estado || 'Sin estado'
+        const key = row?.status || 'Sin estado'
         acc[key] = (acc[key] || 0) + 1
         return acc
       }, {})
