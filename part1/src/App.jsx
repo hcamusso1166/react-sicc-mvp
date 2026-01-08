@@ -13,6 +13,8 @@ const MENU_ITEMS = [
   'Sign Out',
 ]
 
+const CUSTOMERS_PAGE_SIZE = 6
+
 const TABLES = {
   clientes: 'Clientes',
   sites: 'sites',
@@ -125,90 +127,231 @@ const LoginScreen = ({ onLogin }) => {
 }
 
 const Dashboard = ({
+  activeView,
   counts,
   statusData,
   documentos,
   onRefresh,
   loading,
   error,
+  onNavigate,
+  customers,
+  customersPage,
+  customersTotal,
+  customersLoading,
+  customersError,
+  onCustomersPageChange,
+  onCustomersRefresh,
 }) => {
+  const totalCustomerPages = Math.max(
+    1,
+    Math.ceil(customersTotal / CUSTOMERS_PAGE_SIZE),
+  )
+
   return (
     <div className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-logo">SICC</div>
         <nav className="sidebar-menu">
           {MENU_ITEMS.map((item) => (
-            <button key={item} type="button" className="sidebar-link">
+            <button
+              key={item}
+              type="button"
+              className={`sidebar-link${
+                activeView === item ? ' active' : ''
+              }`}
+              onClick={() => onNavigate(item)}
+            >
               {item}
             </button>
           ))}
         </nav>
       </aside>
       <main className="dashboard-content">
-        <header className="dashboard-header">
-          <h2>Dashboard</h2>
-          <button type="button" className="ghost-button" onClick={onRefresh}>
-            Actualizar información
-          </button>
-        </header>
-        {error && (
-          <div className="error-banner">
-            No se pudo cargar la información del backend. {error}
-          </div>
-        )}
-        <section className="stats-grid">
-          <div className="stat-card">
-            <span>Clientes</span>
-            <strong>{counts.clientes}</strong>
-          </div>
-          <div className="stat-card">
-            <span>Sites</span>
-            <strong>{counts.sites}</strong>
-          </div>
-          <div className="stat-card">
-            <span>Requerimientos</span>
-            <strong>{counts.requerimientos}</strong>
-          </div>
-          <div className="stat-card">
-            <span>Proveedores</span>
-            <strong>{counts.proveedores}</strong>
-          </div>
-        </section>
-        <section className="dashboard-panels">
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3>Documentos por estado</h3>
-              {loading && <span className="muted">Cargando...</span>}
-            </div>
-            <PieChart data={statusData} />
-          </div>
-          <div className="panel-card">
-            <div className="panel-header">
-              <h3>Documentos a presentar</h3>
-            </div>
-            <div className="documents-list">
-              {documentos.length === 0 && (
+        {activeView === 'CustomersSICC' ? (
+          <section className="customers-view">
+            <header className="dashboard-header">
+              <div>
+                <h2>Clientes</h2>
                 <p className="muted">
-                  No hay documentos próximos para presentar.
+                  Listado de clientes registrados en el backend.
                 </p>
+              </div>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={onCustomersRefresh}
+              >
+                Actualizar listado
+              </button>
+            </header>
+            <div className="customers-toolbar">
+              <div className="input-wrapper">
+                <input
+                  type="search"
+                  placeholder="Buscar clientes..."
+                  className="text-input"
+                />
+              </div>
+              <button type="button" className="primary-button">
+                Crear Cliente +
+              </button>
+            </div>
+            {customersError && (
+              <div className="error-banner">
+                No se pudo cargar el listado. {customersError}
+              </div>
+            )}
+            <div className="customers-table">
+              <div className="customers-row customers-header">
+                <span>Estado</span>
+                <span>Nombre</span>
+                <span>CUIT</span>
+                <span>Contacto</span>
+                <span>Mail</span>
+                <span>Tel</span>
+                <span>Mail Notif</span>
+              </div>
+              {customersLoading && (
+                <div className="customers-row">
+                  <span className="muted">Cargando clientes...</span>
+                </div>
               )}
-              {documentos.map((documento) => (
-                <div key={documento.id} className="document-row">
-                  <div>
-                    <strong>{getDocumentTitle(documento)}</strong>
-                    <p>{getDocumentSubtitle(documento)}</p>
-                  </div>
-                  <span className="pill">
-                    {getStatusLabel(documento.estado)}
+              {!customersLoading && customers.length === 0 && (
+                <div className="customers-row">
+                  <span className="muted">
+                    No hay clientes disponibles.
                   </span>
+                </div>
+              )}
+              {customers.map((cliente) => (
+                <div key={cliente.id} className="customers-row">
+                  <span>{getStatusLabel(cliente.status)}</span>
+                  <span>{cliente.name || 'Sin nombre'}</span>
+                  <span>{cliente.CUIT || '-'}</span>
+                  <span>{cliente.contacto || '-'}</span>
+                  <span>{cliente.mail || '-'}</span>
+                  <span>{cliente.tel || '-'}</span>
+                  <span>{cliente.mailNotif || '-'}</span>
                 </div>
               ))}
             </div>
-            <button type="button" className="text-link" onClick={onRefresh}>
-              Actualizar la información
-            </button>
-          </div>
-        </section>
+            <div className="pagination">
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() =>
+                  onCustomersPageChange(Math.max(1, customersPage - 1))
+                }
+                disabled={customersPage <= 1}
+              >
+                ◀
+              </button>
+              {Array.from({ length: totalCustomerPages }, (_, index) => {
+                const page = index + 1
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    className={`page-button${
+                      page === customersPage ? ' active' : ''
+                    }`}
+                    onClick={() => onCustomersPageChange(page)}
+                  >
+                    {page}
+                  </button>
+                )
+              })}
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() =>
+                  onCustomersPageChange(
+                    Math.min(totalCustomerPages, customersPage + 1),
+                  )
+                }
+                disabled={customersPage >= totalCustomerPages}
+              >
+                ▶
+              </button>
+            </div>
+          </section>
+        ) : (
+          <>
+            <header className="dashboard-header">
+              <h2>Dashboard</h2>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={onRefresh}
+              >
+                Actualizar información
+              </button>
+            </header>
+            {error && (
+              <div className="error-banner">
+                No se pudo cargar la información del backend. {error}
+              </div>
+            )}
+            <section className="stats-grid">
+              <div className="stat-card">
+                <span>Clientes</span>
+                <strong>{counts.clientes}</strong>
+              </div>
+              <div className="stat-card">
+                <span>Sites</span>
+                <strong>{counts.sites}</strong>
+              </div>
+              <div className="stat-card">
+                <span>Requerimientos</span>
+                <strong>{counts.requerimientos}</strong>
+              </div>
+              <div className="stat-card">
+                <span>Proveedores</span>
+                <strong>{counts.proveedores}</strong>
+              </div>
+            </section>
+            <section className="dashboard-panels">
+              <div className="panel-card">
+                <div className="panel-header">
+                  <h3>Documentos por estado</h3>
+                  {loading && <span className="muted">Cargando...</span>}
+                </div>
+                <PieChart data={statusData} />
+              </div>
+              <div className="panel-card">
+                <div className="panel-header">
+                  <h3>Documentos a presentar</h3>
+                </div>
+                <div className="documents-list">
+                  {documentos.length === 0 && (
+                    <p className="muted">
+                      No hay documentos próximos para presentar.
+                    </p>
+                  )}
+                  {documentos.map((documento) => (
+                    <div key={documento.id} className="document-row">
+                      <div>
+                        <strong>{getDocumentTitle(documento)}</strong>
+                        <p>{getDocumentSubtitle(documento)}</p>
+                      </div>
+                      <span className="pill">
+                        {getStatusLabel(documento.estado)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={onRefresh}
+                >
+                  Actualizar la información
+                </button>
+              </div>
+            </section>
+          </>
+        )}
       </main>
     </div>
   )
@@ -216,6 +359,7 @@ const Dashboard = ({
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [activeView, setActiveView] = useState('Home')
   const [counts, setCounts] = useState({
     clientes: 0,
     sites: 0,
@@ -226,6 +370,11 @@ const App = () => {
   const [documentos, setDocumentos] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [customers, setCustomers] = useState([])
+  const [customersPage, setCustomersPage] = useState(1)
+  const [customersTotal, setCustomersTotal] = useState(0)
+  const [customersLoading, setCustomersLoading] = useState(false)
+  const [customersError, setCustomersError] = useState('')
 
   const colors = useMemo(
     () => ['#22c55e', '#f97316', '#3b82f6', '#ef4444', '#a855f7'],
@@ -302,11 +451,33 @@ const App = () => {
     }
   }
 
+  const loadCustomers = async (page) => {
+    setCustomersLoading(true)
+    setCustomersError('')
+    try {
+      const response = await fetchJSON(
+        `${API_BASE}/items/${TABLES.clientes}?limit=${CUSTOMERS_PAGE_SIZE}&page=${page}&meta=filter_count&sort[]=name`,
+      )
+      setCustomers(response?.data ?? [])
+      setCustomersTotal(getCountFromMeta(response))
+    } catch (err) {
+      setCustomersError(err.message)
+    } finally {
+      setCustomersLoading(false)
+    }
+  }
+
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && activeView === 'Home') {
       loadDashboardData()
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, activeView])
+
+  useEffect(() => {
+    if (isLoggedIn && activeView === 'CustomersSICC') {
+      loadCustomers(customersPage)
+    }
+  }, [isLoggedIn, activeView, customersPage])
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={() => setIsLoggedIn(true)} />
@@ -314,12 +485,28 @@ const App = () => {
 
   return (
     <Dashboard
+      activeView={activeView}
       counts={counts}
       statusData={statusData}
       documentos={documentos}
       onRefresh={loadDashboardData}
       loading={loading}
       error={error}
+      onNavigate={(view) => {
+        if (view === 'Sign Out') {
+          setIsLoggedIn(false)
+          setActiveView('Home')
+          return
+        }
+        setActiveView(view)
+      }}
+      customers={customers}
+      customersPage={customersPage}
+      customersTotal={customersTotal}
+      customersLoading={customersLoading}
+      customersError={customersError}
+      onCustomersPageChange={setCustomersPage}
+      onCustomersRefresh={() => loadCustomers(customersPage)}
     />
   )
 }
