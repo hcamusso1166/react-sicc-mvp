@@ -415,7 +415,7 @@ const App = () => {
         fetchTableCount(DASHBOARD_TABLES.requerimientos),
         fetchTableCount(DASHBOARD_TABLES.proveedores),
         fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?limit=1&meta=filter_count&groupBy[]=status`,
+          `${API_BASE}/items/${TABLES.documentos}?groupBy[]=status&aggregate[count]=*`,
         ),
         fetchJSON(
           `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
@@ -432,7 +432,12 @@ const App = () => {
       const grouped = documentosStatusResponse?.data ?? []
       const statusCounts = grouped.reduce((acc, row) => {
         const key = row?.status || 'Sin estado'
-        acc[key] = (acc[key] || 0) + 1
+                const countValue =
+          Number(row?.count?.['*']) ||
+          Number(row?.count) ||
+          Number(row?.total) ||
+          0
+        acc[key] = (acc[key] || 0) + countValue
         return acc
       }, {})
       const statusRows = Object.entries(statusCounts).map(
