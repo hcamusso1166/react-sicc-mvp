@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+import DashboardLayout from './components/Layout/DashboardLayout'
+import CustomersPage from './pages/CustomersSICC'
+import HomePage from './pages/Home'
 
 const API_BASE =
   import.meta.env.VITE_DIRECTUS_URL ||
@@ -36,34 +39,6 @@ const getStatusLabel = (value) => {
   return value.toString().replace(/_/g, ' ')
 }
 
-const getDocumentTitle = (documento) => {
-  if (documento?.nombre || documento?.titulo || documento?.descripcion) {
-    return (
-      documento?.nombre ||
-      documento?.titulo ||
-      documento?.descripcion ||
-      'Documento'
-    )
-  }
-  if (documento?.idParametro) {
-    return `Parámetro ${documento.idParametro}`
-  }
-  if (documento?.id) {
-    return `Documento #${documento.id}`
-  }
-  return 'Documento'
-}
-
-const getDocumentSubtitle = (documento) => {
-  return (
-    documento?.detalle ||
-    documento?.observaciones ||
-    documento?.tipo ||
-    documento?.status ||
-    'Pendiente'
-  )
-}
-
 const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
 
 const fetchJSON = async (url) => {
@@ -82,38 +57,6 @@ const fetchJSON = async (url) => {
 const fetchTableCount = (table) => {
   return fetchJSON(
     `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
-  )
-}
-
-const PieChart = ({ data }) => {
-  const total = data.reduce((sum, item) => sum + item.value, 0)
-  const conicStops = data.reduce((acc, item) => {
-    const start = acc.offset
-    const slice = total ? (item.value / total) * 100 : 0
-    const end = start + slice
-    acc.stops.push(`${item.color} ${start}% ${end}%`)
-    acc.offset = end
-    return acc
-  }, { offset: 0, stops: [] })
-
-  return (
-    <div className="pie-chart">
-      <div
-        className="pie"
-        style={{
-          background: `conic-gradient(${conicStops.stops.join(', ')})`,
-        }}
-      />
-      <div className="pie-legend">
-        {data.map((item) => (
-          <div key={item.label} className="pie-legend-item">
-            <span className="pie-color" style={{ background: item.color }} />
-            <span>{item.label}</span>
-            <strong>{item.value}</strong>
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }
 
@@ -143,244 +86,6 @@ const LoginScreen = ({ onLogin }) => {
   )
 }
 
-const Dashboard = ({
-  activeView,
-  counts,
-  statusData,
-  documentos,
-  onRefresh,
-  loading,
-  error,
-  onNavigate,
-  customers,
-  customersPage,
-  customersTotal,
-  customersLoading,
-  customersError,
-  customerSearch,
-  onCustomerSearchChange,
-  filteredCustomers,
-  onCustomersPageChange,
-  onCustomersRefresh,
-}) => {
-  const totalCustomerPages = Math.max(
-    1,
-    Math.ceil(customersTotal / CUSTOMERS_PAGE_SIZE),
-  )
-
-  return (
-    <div className="dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-logo">SICC</div>
-        <nav className="sidebar-menu">
-          {MENU_ITEMS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`sidebar-link${
-                activeView === item ? ' active' : ''
-              }`}
-              onClick={() => onNavigate(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-      </aside>
-      <main className="dashboard-content">
-        {activeView === 'CustomersSICC' ? (
-          <section className="customers-view">
-            <header className="dashboard-header">
-              <div>
-                <h2>Clientes</h2>
-                <p className="muted">
-                  Listado de clientes registrados en el backend.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={onCustomersRefresh}
-              >
-                Actualizar listado
-              </button>
-            </header>
-            <div className="customers-toolbar">
-              <div className="input-wrapper">
-                <input
-                  type="search"
-                  placeholder="Buscar clientes..."
-                  className="text-input"
-                  value={customerSearch}
-                  onChange={(event) =>
-                    onCustomerSearchChange(event.target.value)
-                  }
-                />
-              </div>
-              <button type="button" className="primary-button">
-                Crear Cliente +
-              </button>
-            </div>
-            {customersError && (
-              <div className="error-banner">
-                No se pudo cargar el listado. {customersError}
-              </div>
-            )}
-            <div className="customers-table">
-              <div className="customers-row customers-header">
-                <span>Estado</span>
-                <span>Nombre</span>
-                <span>CUIT</span>
-                <span>Contacto</span>
-                <span>Mail</span>
-                <span>Tel</span>
-                <span>Mail Notif</span>
-              </div>
-              {customersLoading && (
-                <div className="customers-row">
-                  <span className="muted">Cargando clientes...</span>
-                </div>
-              )}
-              {!customersLoading && filteredCustomers.length === 0 && (
-                <div className="customers-row">
-                  <span className="muted">
-                    No hay clientes disponibles.
-                  </span>
-                </div>
-              )}
-              {filteredCustomers.map((cliente) => (
-                <div key={cliente.id} className="customers-row">
-                  <span>{getStatusLabel(cliente.status)}</span>
-                  <span>{cliente.name || 'Sin nombre'}</span>
-                  <span>{cliente.CUIT || '-'}</span>
-                  <span>{cliente.contacto || '-'}</span>
-                  <span>{cliente.mail || '-'}</span>
-                  <span>{cliente.tel || '-'}</span>
-                  <span>{cliente.mailNotif || '-'}</span>
-                </div>
-              ))}
-            </div>
-            <div className="pagination">
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() =>
-                  onCustomersPageChange(Math.max(1, customersPage - 1))
-                }
-                disabled={customersPage <= 1}
-              >
-                ◀
-              </button>
-              {Array.from({ length: totalCustomerPages }, (_, index) => {
-                const page = index + 1
-                return (
-                  <button
-                    key={page}
-                    type="button"
-                    className={`page-button${
-                      page === customersPage ? ' active' : ''
-                    }`}
-                    onClick={() => onCustomersPageChange(page)}
-                  >
-                    {page}
-                  </button>
-                )
-              })}
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() =>
-                  onCustomersPageChange(
-                    Math.min(totalCustomerPages, customersPage + 1),
-                  )
-                }
-                disabled={customersPage >= totalCustomerPages}
-              >
-                ▶
-              </button>
-            </div>
-          </section>
-        ) : (
-          <>
-            <header className="dashboard-header">
-              <h2>Dashboard</h2>
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={onRefresh}
-              >
-                Actualizar información
-              </button>
-            </header>
-            {error && (
-              <div className="error-banner">
-                No se pudo cargar la información del backend. {error}
-              </div>
-            )}
-            <section className="stats-grid">
-              <div className="stat-card">
-                <span>Clientes</span>
-                <strong>{counts.clientes}</strong>
-              </div>
-              <div className="stat-card">
-                <span>Sites</span>
-                <strong>{counts.sites}</strong>
-              </div>
-              <div className="stat-card">
-                <span>Requerimientos</span>
-                <strong>{counts.requerimientos}</strong>
-              </div>
-              <div className="stat-card">
-                <span>Proveedores</span>
-                <strong>{counts.proveedores}</strong>
-              </div>
-            </section>
-            <section className="dashboard-panels">
-              <div className="panel-card">
-                <div className="panel-header">
-                  <h3>Documentos por estado</h3>
-                  {loading && <span className="muted">Cargando...</span>}
-                </div>
-                <PieChart data={statusData} />
-              </div>
-              <div className="panel-card">
-                <div className="panel-header">
-                  <h3>Documentos a presentar</h3>
-                </div>
-                <div className="documents-list">
-                  {documentos.length === 0 && (
-                    <p className="muted">
-                      No hay documentos próximos para presentar.
-                    </p>
-                  )}
-                  {documentos.map((documento) => (
-                    <div key={documento.id} className="document-row">
-                      <div>
-                        <strong>{getDocumentTitle(documento)}</strong>
-                        <p>{getDocumentSubtitle(documento)}</p>
-                      </div>
-                      <span className="pill">
-                        {getStatusLabel(documento.estado)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="text-link"
-                  onClick={onRefresh}
-                >
-                  Actualizar la información
-                </button>
-              </div>
-            </section>
-          </>
-        )}
-      </main>
-    </div>
-  )
-}
-
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeView, setActiveView] = useState('Home')
@@ -406,6 +111,10 @@ const App = () => {
     [],
   )
   const filteredCustomers = useMemo(() => customers, [customers])
+  const totalCustomerPages = Math.max(
+    1,
+    Math.ceil(customersTotal / CUSTOMERS_PAGE_SIZE),
+  )
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -519,14 +228,9 @@ const App = () => {
   }
 
   return (
-    <Dashboard
+      <DashboardLayout
+      menuItems={MENU_ITEMS}
       activeView={activeView}
-      counts={counts}
-      statusData={statusData}
-      documentos={documentos}
-      onRefresh={loadDashboardData}
-      loading={loading}
-      error={error}
       onNavigate={(view) => {
         if (view === 'Sign Out') {
           setIsLoggedIn(false)
@@ -535,20 +239,35 @@ const App = () => {
         }
         setActiveView(view)
       }}
-      customers={customers}
-      customersPage={customersPage}
-      customersTotal={customersTotal}
-      customersLoading={customersLoading}
-      customersError={customersError}
-      customerSearch={customerSearch}
-      onCustomerSearchChange={(value) => {
-        setCustomerSearch(value)
-        setCustomersPage(1)
-      }}
-      filteredCustomers={filteredCustomers}
-      onCustomersPageChange={setCustomersPage}
-      onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
-    />
+      >
+      {activeView === 'CustomersSICC' ? (
+        <CustomersPage
+          customerSearch={customerSearch}
+          onCustomerSearchChange={(value) => {
+            setCustomerSearch(value)
+            setCustomersPage(1)
+          }}
+          customersError={customersError}
+          customersLoading={customersLoading}
+          filteredCustomers={filteredCustomers}
+          customersPage={customersPage}
+          totalCustomerPages={totalCustomerPages}
+          onCustomersPageChange={setCustomersPage}
+          onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
+          getStatusLabel={getStatusLabel}
+        />
+      ) : (
+        <HomePage
+          counts={counts}
+          statusData={statusData}
+          documentos={documentos}
+          onRefresh={loadDashboardData}
+          loading={loading}
+          error={error}
+          onStatusLabel={getStatusLabel}
+        />
+      )}
+    </DashboardLayout>
   )
 }
 
