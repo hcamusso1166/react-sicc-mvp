@@ -157,6 +157,9 @@ const Dashboard = ({
   customersTotal,
   customersLoading,
   customersError,
+  customerSearch,
+  onCustomerSearchChange,
+  filteredCustomers,
   onCustomersPageChange,
   onCustomersRefresh,
 }) => {
@@ -208,6 +211,10 @@ const Dashboard = ({
                   type="search"
                   placeholder="Buscar clientes..."
                   className="text-input"
+                  value={customerSearch}
+                  onChange={(event) =>
+                    onCustomerSearchChange(event.target.value)
+                  }
                 />
               </div>
               <button type="button" className="primary-button">
@@ -234,14 +241,14 @@ const Dashboard = ({
                   <span className="muted">Cargando clientes...</span>
                 </div>
               )}
-              {!customersLoading && customers.length === 0 && (
+              {!customersLoading && filteredCustomers.length === 0 && (
                 <div className="customers-row">
                   <span className="muted">
                     No hay clientes disponibles.
                   </span>
                 </div>
               )}
-              {customers.map((cliente) => (
+              {filteredCustomers.map((cliente) => (
                 <div key={cliente.id} className="customers-row">
                   <span>{getStatusLabel(cliente.status)}</span>
                   <span>{cliente.name || 'Sin nombre'}</span>
@@ -392,11 +399,13 @@ const App = () => {
   const [customersTotal, setCustomersTotal] = useState(0)
   const [customersLoading, setCustomersLoading] = useState(false)
   const [customersError, setCustomersError] = useState('')
+  const [customerSearch, setCustomerSearch] = useState('')
 
   const colors = useMemo(
     () => ['#22c55e', '#f97316', '#3b82f6', '#ef4444', '#a855f7'],
     [],
   )
+  const filteredCustomers = useMemo(() => customers, [customers])
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -467,12 +476,22 @@ const App = () => {
     }
   }
 
-  const loadCustomers = async (page) => {
+  const loadCustomers = async (page, searchTerm = '') => {
     setCustomersLoading(true)
     setCustomersError('')
     try {
+      const trimmedSearch = searchTerm.trim()
+      const query = new URLSearchParams({
+        limit: String(CUSTOMERS_PAGE_SIZE),
+        page: String(page),
+        meta: 'filter_count',
+        'sort[]': 'name',
+      })
+      if (trimmedSearch) {
+        query.append('filter[name][_contains]', trimmedSearch)
+      }
       const response = await fetchJSON(
-        `${API_BASE}/items/${TABLES.clientes}?limit=${CUSTOMERS_PAGE_SIZE}&page=${page}&meta=filter_count&sort[]=name`,
+        `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,
       )
       setCustomers(response?.data ?? [])
       setCustomersTotal(getCountFromMeta(response))
@@ -491,9 +510,9 @@ const App = () => {
 
   useEffect(() => {
     if (isLoggedIn && activeView === 'CustomersSICC') {
-      loadCustomers(customersPage)
+      loadCustomers(customersPage, customerSearch)
     }
-  }, [isLoggedIn, activeView, customersPage])
+  }, [isLoggedIn, activeView, customersPage, customerSearch])
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={() => setIsLoggedIn(true)} />
@@ -521,8 +540,14 @@ const App = () => {
       customersTotal={customersTotal}
       customersLoading={customersLoading}
       customersError={customersError}
+      customerSearch={customerSearch}
+      onCustomerSearchChange={(value) => {
+        setCustomerSearch(value)
+        setCustomersPage(1)
+      }}
+      filteredCustomers={filteredCustomers}
       onCustomersPageChange={setCustomersPage}
-      onCustomersRefresh={() => loadCustomers(customersPage)}
+      onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
     />
   )
 }
