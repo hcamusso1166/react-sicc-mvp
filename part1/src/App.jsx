@@ -3,10 +3,7 @@ import './App.css'
 import DashboardLayout from './components/Layout/DashboardLayout'
 import CustomersPage from './pages/CustomersSICC'
 import HomePage from './pages/Home'
-
-const API_BASE =
-  import.meta.env.VITE_DIRECTUS_URL ||
-  (import.meta.env.DEV ? '/directus' : 'https://tto.com.ar')
+import { fetchCustomersPage, fetchDashboardData } from './services/directus'
 
 const MENU_ITEMS = [
   'Home',
@@ -18,46 +15,9 @@ const MENU_ITEMS = [
 
 const CUSTOMERS_PAGE_SIZE = 6
 
-const DASHBOARD_TABLES = {
-  clientes: 'Clientes',
-  sites: 'sites',
-  requerimientos: 'requerimiento',
-  proveedores: 'proveedor',
-  }
-
-const TABLES = {
-  ...DASHBOARD_TABLES,
-  documentos: 'DocumentosRequeridos',
-}
-
-const getCountFromMeta = (payload) => {
-  return Number(payload?.meta?.filter_count ?? 0)
-}
-
 const getStatusLabel = (value) => {
   if (!value) return 'Sin estado'
   return value.toString().replace(/_/g, ' ')
-}
-
-const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
-
-const fetchJSON = async (url) => {
-  const response = await fetch(url, {
-    headers: DIRECTUS_TOKEN
-      ? {
-          Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-        }
-      : undefined,
-  })
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
-  }
-  return response.json()
-}
-const fetchTableCount = (table) => {
-  return fetchJSON(
-    `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
-  )
 }
 
 const LoginScreen = ({ onLogin }) => {
@@ -120,64 +80,11 @@ const App = () => {
     setLoading(true)
     setError('')
     try {
-      const [
-        clientesResponse,
-        sitesResponse,
-        requerimientosResponse,
-        proveedoresResponse,
-        documentosStatusResponse,
-        documentosListResponse,
-      ] = await Promise.all([
-        fetchTableCount(DASHBOARD_TABLES.clientes),
-        fetchTableCount(DASHBOARD_TABLES.sites),
-        fetchTableCount(DASHBOARD_TABLES.requerimientos),
-        fetchTableCount(DASHBOARD_TABLES.proveedores),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?groupBy[]=status&aggregate[count]=*`,
-        ),
-        fetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
-        ),
-      ])
-
-      setCounts({
-        clientes: getCountFromMeta(clientesResponse),
-        sites: getCountFromMeta(sitesResponse),
-        requerimientos: getCountFromMeta(requerimientosResponse),
-        proveedores: getCountFromMeta(proveedoresResponse),
-      })
-
-      const grouped = documentosStatusResponse?.data ?? []
-      const statusCounts = grouped.reduce((acc, row) => {
-        const key = row?.status || 'Sin estado'
-                const countValue =
-          Number(row?.count?.['*']) ||
-          Number(row?.count) ||
-          Number(row?.total) ||
-          0
-        acc[key] = (acc[key] || 0) + countValue
-        return acc
-      }, {})
-      const statusRows = Object.entries(statusCounts).map(
-        ([estado, count], index) => ({
-          label: getStatusLabel(estado),
-          value: Number(count ?? 0),
-          color: colors[index % colors.length],
-        }),
-      )
-      setStatusData(
-        statusRows.length
-          ? statusRows
-          : [
-              {
-                label: 'Pendiente',
-                value: 0,
-                color: colors[0],
-              },
-            ],
-      )
-
-      setDocumentos(documentosListResponse?.data ?? [])
+      const { counts: nextCounts, statusData: nextStatusData, documentos: nextDocumentos } =
+        await fetchDashboardData({ colors, getStatusLabel })
+      setCounts(nextCounts)
+      setStatusData(nextStatusData)
+      setDocumentos(nextDocumentos)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -189,21 +96,13 @@ const App = () => {
     setCustomersLoading(true)
     setCustomersError('')
     try {
-      const trimmedSearch = searchTerm.trim()
-      const query = new URLSearchParams({
-        limit: String(CUSTOMERS_PAGE_SIZE),
-        page: String(page),
-        meta: 'filter_count',
-        'sort[]': 'name',
+      const { customers: nextCustomers, total } = await fetchCustomersPage({
+        page,
+        searchTerm,
+        pageSize: CUSTOMERS_PAGE_SIZE,
       })
-      if (trimmedSearch) {
-        query.append('filter[name][_contains]', trimmedSearch)
-      }
-      const response = await fetchJSON(
-        `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,
-      )
-      setCustomers(response?.data ?? [])
-      setCustomersTotal(getCountFromMeta(response))
+      setCustomers(nextCustomers)
+      setCustomersTotal(total)
     } catch (err) {
       setCustomersError(err.message)
     } finally {
