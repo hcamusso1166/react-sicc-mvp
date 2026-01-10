@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import './App.css'
 import DashboardLayout from './components/Layout/DashboardLayout'
-import CustomersPage from './pages/CustomersSICC'
-import HomePage from './pages/Home'
+import AppRoutes from './routes/AppRoutes'
 import { fetchCustomersPage, fetchDashboardData } from './services/directus'
 
 const MENU_ITEMS = [
-  'Home',
-  'CustomersSICC',
-  'Integral View',
-  'Manager',
-  'Sign Out',
+  { label: 'Home', to: '/' },
+  { label: 'Clientes', to: '/clientes' },
+  { label: 'Integral View', to: '/integral-view' },
+  { label: 'Manager', to: '/manager' },
 ]
 
 const CUSTOMERS_PAGE_SIZE = 6
@@ -31,9 +30,7 @@ const LoginScreen = ({ onLogin }) => {
           <h1>
             Bienvenido a SICC. Sistema Integral de Control de Contratistas.
           </h1>
-          <p>
-            Inicia sesión para acceder al panel de gestión documental.
-          </p>
+            <p>Inicia sesión para acceder al panel de gestión documental.</p>
           <button type="button" className="primary-button" onClick={onLogin}>
             Entrar al Dashboard
           </button>
@@ -47,8 +44,8 @@ const LoginScreen = ({ onLogin }) => {
 }
 
 const App = () => {
+  const location = useLocation()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [activeView, setActiveView] = useState('Home')
   const [counts, setCounts] = useState({
     clientes: 0,
     sites: 0,
@@ -80,8 +77,11 @@ const App = () => {
     setLoading(true)
     setError('')
     try {
-      const { counts: nextCounts, statusData: nextStatusData, documentos: nextDocumentos } =
-        await fetchDashboardData({ colors, getStatusLabel })
+      const {
+        counts: nextCounts,
+        statusData: nextStatusData,
+        documentos: nextDocumentos,
+      } = await fetchDashboardData({ colors, getStatusLabel })
       setCounts(nextCounts)
       setStatusData(nextStatusData)
       setDocumentos(nextDocumentos)
@@ -111,61 +111,52 @@ const App = () => {
   }
 
   useEffect(() => {
-    if (isLoggedIn && activeView === 'Home') {
+    if (isLoggedIn && location.pathname === '/') {
       loadDashboardData()
     }
-  }, [isLoggedIn, activeView])
+  }, [isLoggedIn, location.pathname])
 
   useEffect(() => {
-    if (isLoggedIn && activeView === 'CustomersSICC') {
+    if (isLoggedIn && location.pathname === '/clientes') {
       loadCustomers(customersPage, customerSearch)
     }
-  }, [isLoggedIn, activeView, customersPage, customerSearch])
+  }, [isLoggedIn, location.pathname, customersPage, customerSearch])
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={() => setIsLoggedIn(true)} />
   }
 
   return (
-      <DashboardLayout
+    <DashboardLayout
       menuItems={MENU_ITEMS}
-      activeView={activeView}
-      onNavigate={(view) => {
-        if (view === 'Sign Out') {
-          setIsLoggedIn(false)
-          setActiveView('Home')
-          return
-        }
-        setActiveView(view)
+      onSignOut={() => {
+        setIsLoggedIn(false)
+        setCustomersPage(1)
+        setCustomerSearch('')
       }}
-      >
-      {activeView === 'CustomersSICC' ? (
-        <CustomersPage
-          customerSearch={customerSearch}
-          onCustomerSearchChange={(value) => {
-            setCustomerSearch(value)
-            setCustomersPage(1)
-          }}
-          customersError={customersError}
-          customersLoading={customersLoading}
-          filteredCustomers={filteredCustomers}
-          customersPage={customersPage}
-          totalCustomerPages={totalCustomerPages}
-          onCustomersPageChange={setCustomersPage}
-          onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
-          getStatusLabel={getStatusLabel}
-        />
-      ) : (
-        <HomePage
-          counts={counts}
-          statusData={statusData}
-          documentos={documentos}
-          onRefresh={loadDashboardData}
-          loading={loading}
-          error={error}
-          onStatusLabel={getStatusLabel}
-        />
-      )}
+    >
+      <AppRoutes
+        counts={counts}
+        statusData={statusData}
+        documentos={documentos}
+        onRefresh={loadDashboardData}
+        loading={loading}
+        error={error}
+        onStatusLabel={getStatusLabel}
+        customerSearch={customerSearch}
+        onCustomerSearchChange={(value) => {
+          setCustomerSearch(value)
+          setCustomersPage(1)
+        }}
+        customersError={customersError}
+        customersLoading={customersLoading}
+        filteredCustomers={filteredCustomers}
+        customersPage={customersPage}
+        totalCustomerPages={totalCustomerPages}
+        onCustomersPageChange={setCustomersPage}
+        onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
+        getStatusLabel={getStatusLabel}
+      />
     </DashboardLayout>
   )
 }

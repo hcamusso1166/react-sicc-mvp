@@ -1,19 +1,29 @@
-const DashboardLayout = ({ menuItems, activeView, onNavigate, children }) => {
+import { NavLink } from 'react-router-dom'
+
+const DashboardLayout = ({ menuItems, onSignOut, children }) => {
   return (
     <div className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-logo">SICC</div>
         <nav className="sidebar-menu">
           {menuItems.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`sidebar-link${activeView === item ? ' active' : ''}`}
-              onClick={() => onNavigate(item)}
+            <NavLink
+              key={item.label}
+              to={item.to}
+              className={({ isActive }) =>
+                `sidebar-link${isActive ? ' active' : ''}`
+              }
             >
-              {item}
-            </button>
+              {item.label}
+            </NavLink>
           ))}
+                    <button
+            type="button"
+            className="sidebar-link"
+            onClick={onSignOut}
+          >
+            Sign Out
+          </button>
         </nav>
       </aside>
       <main className="dashboard-content">{children}</main>
