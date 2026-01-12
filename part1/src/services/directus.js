@@ -29,6 +29,24 @@ const fetchJSON = async (url) => {
   }
   return response.json()
 }
+const postJSON = async (url, payload) => {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(DIRECTUS_TOKEN
+        ? {
+            Authorization: `Bearer ${DIRECTUS_TOKEN}`,
+          }
+        : {}),
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`)
+  }
+  return response.json()
+}
 
 const fetchTableCount = (table) => {
   return fetchJSON(
@@ -129,6 +147,10 @@ const fetchCustomersPage = async ({ page, searchTerm = '', pageSize }) => {
     total: getCountFromMeta(response),
   }
 }
+const createCustomer = async (payload) => {
+  const response = await postJSON(`${API_BASE}/items/${TABLES.clientes}`, payload)
+  return response?.data
+}
 
 export {
   API_BASE,
@@ -139,4 +161,5 @@ export {
   fetchTableCount,
   fetchDashboardData,
   fetchCustomersPage,
+  createCustomer,
 }

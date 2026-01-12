@@ -4,6 +4,7 @@ import CustomersPage from '../pages/CustomersSICC'
 import CreateCustomer from '../pages/CustomersSICC/CreateCustomer'
 import DeleteCustomer from '../pages/CustomersSICC/DeleteCustomer'
 import EditCustomer from '../pages/CustomersSICC/EditCustomer'
+import SuccessCustomer from '../pages/CustomersSICC/SuccessCustomer'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
 import ManagerPage from '../pages/Manager'
@@ -63,6 +64,7 @@ const AppRoutes = ({
         }
       />
       <Route path="/clientes/nuevo" element={<CreateCustomer />} />
+      <Route path="/clientes/nuevo/successcli" element={<SuccessCustomer />} />
       <Route path="/clientes/:id/editar" element={<EditCustomer />} />
       <Route path="/clientes/:id/borrar" element={<DeleteCustomer />} />
       <Route path="/manager" element={<ManagerPage />} />
