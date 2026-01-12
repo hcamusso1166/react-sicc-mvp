@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const CustomersPage = ({
   customerSearch,
   onCustomerSearchChange,
@@ -35,9 +37,9 @@ const CustomersPage = ({
             onChange={(event) => onCustomerSearchChange(event.target.value)}
           />
         </div>
-        <button type="button" className="primary-button">
+        <Link to="/clientes/nuevo" className="primary-button">
           Crear Cliente +
-        </button>
+        </Link>
       </div>
       {customersError && (
         <div className="error-banner">
