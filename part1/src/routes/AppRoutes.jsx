@@ -1,9 +1,14 @@
 import { Route, Routes } from 'react-router-dom'
 
 import CustomersPage from '../pages/CustomersSICC'
+import CreateCustomer from '../pages/CustomersSICC/CreateCustomer'
+import DeleteCustomer from '../pages/CustomersSICC/DeleteCustomer'
+import EditCustomer from '../pages/CustomersSICC/EditCustomer'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
 import ManagerPage from '../pages/Manager'
+import DocumentosAVencerPage from '../pages/Reportes/DocumentosAVencer'
+import DocumentosVerificadosPage from '../pages/Reportes/DocumentosVerificados'
 
 const AppRoutes = ({
   counts,
@@ -57,7 +62,18 @@ const AppRoutes = ({
           />
         }
       />
+      <Route path="/clientes/nuevo" element={<CreateCustomer />} />
+      <Route path="/clientes/:id/editar" element={<EditCustomer />} />
+      <Route path="/clientes/:id/borrar" element={<DeleteCustomer />} />
       <Route path="/manager" element={<ManagerPage />} />
+            <Route
+        path="/reportes/documentos-a-vencer"
+        element={<DocumentosAVencerPage />}
+      />
+      <Route
+        path="/reportes/documentos-verificados"
+        element={<DocumentosVerificadosPage />}
+      />
       <Route path="/integral-view" element={<IntegralViewPage />} />
     </Routes>
   )

@@ -9,6 +9,8 @@ const MENU_ITEMS = [
   { label: 'Home', to: '/' },
   { label: 'Clientes', to: '/clientes' },
   { label: 'Integral View', to: '/integral-view' },
+    { label: 'Reportes - Documentos a vencer', to: '/reportes/documentos-a-vencer' },
+    { label: 'Reportes - Documentos verificados', to: '/reportes/documentos-verificados', },
   { label: 'Manager', to: '/manager' },
 ]
 
