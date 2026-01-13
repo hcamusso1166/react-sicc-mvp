@@ -11,6 +11,15 @@ const STATUS_OPTIONS = [
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const CUIT_PATTERN = /^\d{2}-\d{8}-\d$/
+const slugify = (value) =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
 
 const CreateCustomer = () => {
   const navigate = useNavigate()
@@ -80,9 +89,11 @@ const CreateCustomer = () => {
 
     setSubmitting(true)
     try {
+      const urlSlug = slugify(formState.name) || formState.name.trim()
       await createCustomer({
         status: formState.status,
         name: formState.name.trim(),
+        urlSlug,
         contacto: formState.contacto.trim(),
         mail: formState.mail.trim(),
         tel: formState.tel.trim(),
