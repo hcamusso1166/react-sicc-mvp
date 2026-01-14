@@ -61,13 +61,26 @@ const getDocumentSubtitle = (documento) => {
   )
 }
 
-const HomePage = ({ counts, statusData, documentos, onRefresh, loading, error, onStatusLabel }) => {
+const HomePage = ({
+  counts,
+  statusData,
+  documentos,
+  onRefresh,
+  loading,
+  error,
+  onStatusLabel,
+}) => {
   return (
     <>
       <header className="dashboard-header">
         <h2>Dashboard</h2>
-        <button type="button" className="ghost-button" onClick={onRefresh}>
-          Actualizar información
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={onRefresh}
+          disabled={loading}
+        >
+          {loading ? 'Actualizando...' : 'Actualizar información'}
         </button>
       </header>
       {error && (
@@ -121,8 +134,13 @@ const HomePage = ({ counts, statusData, documentos, onRefresh, loading, error, o
               </div>
             ))}
           </div>
-          <button type="button" className="text-link" onClick={onRefresh}>
-            Actualizar la información
+          <button
+            type="button"
+            className="text-link"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            {loading ? 'Actualizando...' : 'Actualizar la información'}
           </button>
         </div>
       </section>

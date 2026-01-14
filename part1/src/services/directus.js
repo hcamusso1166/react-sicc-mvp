@@ -18,6 +18,7 @@ const TABLES = {
 
 const fetchJSON = async (url) => {
   const response = await fetch(url, {
+    cache: 'no-store',
     headers: DIRECTUS_TOKEN
       ? {
           Authorization: `Bearer ${DIRECTUS_TOKEN}`,
