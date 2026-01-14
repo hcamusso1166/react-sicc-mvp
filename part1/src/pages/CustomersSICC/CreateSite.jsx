@@ -1,0 +1,173 @@
+import { useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+
+import { createSite } from '../../services/directus'
+
+const STATUS_OPTIONS = [
+  { label: 'Publicado', value: 'published' },
+  { label: 'Borrador', value: 'draft' },
+  { label: 'Archivado', value: 'archived' },
+]
+
+const slugify = (value) =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+
+const CreateSite = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const customer = location.state?.customer
+  const customerId = customer?.id
+  const customerName = customer?.name || 'cliente'
+
+  const [formState, setFormState] = useState({
+    status: STATUS_OPTIONS[0].value,
+    nombre: '',
+  })
+  const [formErrors, setFormErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const statusOptions = useMemo(() => STATUS_OPTIONS, [])
+
+  const updateField = (field, value) => {
+    setFormState((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const validate = (values) => {
+    const errors = {}
+    if (!values.status) {
+      errors.status = 'Seleccioná un estado.'
+    }
+    if (!values.nombre.trim()) {
+      errors.nombre = 'El nombre es obligatorio.'
+    } else if (values.nombre.trim().length > 100) {
+      errors.nombre = 'El nombre no puede superar 100 caracteres.'
+    }
+    return errors
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setSubmitError('')
+    const nextErrors = validate(formState)
+    setFormErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+    if (!customerId) {
+      setSubmitError('No se encontró el cliente asociado al Site.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const urlSlug = slugify(formState.nombre) || formState.nombre.trim()
+      const createdSite = await createSite({
+        status: formState.status,
+        nombre: formState.nombre.trim(),
+        urlSlug,
+        idCliente: customerId,
+      })
+      navigate('/clientes/site/success', {
+        state: {
+          customer: {
+            id: customerId,
+            name: customerName,
+          },
+          site: {
+            id: createdSite?.id,
+            nombre: createdSite?.nombre || formState.nombre.trim(),
+            urlSlug,
+          },
+        },
+      })
+    } catch (error) {
+      setSubmitError(error.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="customers-view">
+      <header className="dashboard-header">
+        <div>
+          <h2>Nuevo Site</h2>
+          <p className="muted">
+            Completá los datos para registrar un Site del cliente {customerName}.
+          </p>
+        </div>
+      </header>
+      <div className="panel-card">
+        {!customerId && (
+          <div className="error-banner">
+            No se detectó un cliente para asociar el Site.
+          </div>
+        )}
+        {submitError && <div className="error-banner">{submitError}</div>}
+        <form className="customer-form" onSubmit={handleSubmit}>
+          <div className="customer-form-grid">
+            <label className="form-field">
+              <span className="form-label">Cliente</span>
+              <input
+                className="text-input"
+                type="text"
+                value={customerName}
+                disabled
+              />
+            </label>
+            <label className="form-field">
+              <span className="form-label">Estado</span>
+              <select
+                className="text-input"
+                value={formState.status}
+                onChange={(event) => updateField('status', event.target.value)}
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {formErrors.status && (
+                <span className="field-error">{formErrors.status}</span>
+              )}
+            </label>
+            <label className="form-field">
+              <span className="form-label">Nombre del Site</span>
+              <input
+                className="text-input"
+                type="text"
+                value={formState.nombre}
+                onChange={(event) => updateField('nombre', event.target.value)}
+                placeholder="Nombre..."
+                maxLength={100}
+                required
+              />
+              {formErrors.nombre && (
+                <span className="field-error">{formErrors.nombre}</span>
+              )}
+            </label>
+          </div>
+          <div className="form-actions">
+            <Link className="secondary-button" to="/clientes">
+              Cancelar
+            </Link>
+            <button className="primary-button" type="submit" disabled={submitting}>
+              {submitting ? 'Guardando...' : 'Guardar Site'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+export default CreateSite

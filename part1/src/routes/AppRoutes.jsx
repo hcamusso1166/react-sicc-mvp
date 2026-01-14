@@ -2,9 +2,12 @@ import { Route, Routes } from 'react-router-dom'
 
 import CustomersPage from '../pages/CustomersSICC'
 import CreateCustomer from '../pages/CustomersSICC/CreateCustomer'
+import CreateRequirement from '../pages/CustomersSICC/CreateRequirement'
+import CreateSite from '../pages/CustomersSICC/CreateSite'
 import DeleteCustomer from '../pages/CustomersSICC/DeleteCustomer'
 import EditCustomer from '../pages/CustomersSICC/EditCustomer'
 import SuccessCustomer from '../pages/CustomersSICC/SuccessCustomer'
+import SuccessSite from '../pages/CustomersSICC/SuccessSite'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
 import ManagerPage from '../pages/Manager'
@@ -65,10 +68,16 @@ const AppRoutes = ({
       />
       <Route path="/clientes/nuevo" element={<CreateCustomer />} />
       <Route path="/clientes/nuevo/successcli" element={<SuccessCustomer />} />
+      <Route path="/clientes/site/nuevo" element={<CreateSite />} />
+      <Route path="/clientes/site/success" element={<SuccessSite />} />
+      <Route
+        path="/clientes/requerimiento/nuevo"
+        element={<CreateRequirement />}
+      />
       <Route path="/clientes/:id/editar" element={<EditCustomer />} />
       <Route path="/clientes/:id/borrar" element={<DeleteCustomer />} />
       <Route path="/manager" element={<ManagerPage />} />
-            <Route
+      <Route
         path="/reportes/documentos-a-vencer"
         element={<DocumentosAVencerPage />}
       />

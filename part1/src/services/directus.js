@@ -152,6 +152,19 @@ const createCustomer = async (payload) => {
   return response?.data
 }
 
+const createSite = async (payload) => {
+  const response = await postJSON(`${API_BASE}/items/${TABLES.sites}`, payload)
+  return response?.data
+}
+
+const createRequirement = async (payload) => {
+  const response = await postJSON(
+    `${API_BASE}/items/${TABLES.requerimientos}`,
+    payload,
+  )
+  return response?.data
+}
+
 export {
   API_BASE,
   DIRECTUS_TOKEN,
@@ -162,4 +175,6 @@ export {
   fetchDashboardData,
   fetchCustomersPage,
   createCustomer,
+  createSite,
+  createRequirement,
 }

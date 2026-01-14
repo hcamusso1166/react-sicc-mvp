@@ -90,7 +90,7 @@ const CreateCustomer = () => {
     setSubmitting(true)
     try {
       const urlSlug = slugify(formState.name) || formState.name.trim()
-      await createCustomer({
+      const createdCustomer = await createCustomer({
         status: formState.status,
         name: formState.name.trim(),
         urlSlug,
@@ -104,7 +104,14 @@ const CreateCustomer = () => {
         piso: formState.piso.trim() || null,
         dpto: formState.dpto.trim() || null,
       })
-      navigate('/clientes/nuevo/successcli')
+      navigate('/clientes/nuevo/successcli', {
+        state: {
+          customer: {
+            id: createdCustomer?.id,
+            name: createdCustomer?.name || formState.name.trim(),
+          },
+        },
+      })
     } catch (error) {
       setSubmitError(error.message)
     } finally {
