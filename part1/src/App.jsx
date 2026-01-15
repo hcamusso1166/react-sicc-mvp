@@ -78,6 +78,14 @@ const App = () => {
   const loadDashboardData = async () => {
     setLoading(true)
     setError('')
+        setCounts({
+      clientes: 0,
+      sites: 0,
+      requerimientos: 0,
+      proveedores: 0,
+    })
+    setStatusData([])
+    setDocumentos([])
     try {
       const {
         counts: nextCounts,
@@ -97,6 +105,8 @@ const App = () => {
   const loadCustomers = async (page, searchTerm = '') => {
     setCustomersLoading(true)
     setCustomersError('')
+    setCustomers([])
+    setCustomersTotal(0)
     try {
       const { customers: nextCustomers, total } = await fetchCustomersPage({
         page,
@@ -135,6 +145,18 @@ const App = () => {
         setIsLoggedIn(false)
         setCustomersPage(1)
         setCustomerSearch('')
+        setCounts({
+          clientes: 0,
+          sites: 0,
+          requerimientos: 0,
+          proveedores: 0,
+        })
+        setStatusData([])
+        setDocumentos([])
+        setCustomers([])
+        setCustomersTotal(0)
+        setCustomersError('')
+        setError('')
       }}
     >
       <AppRoutes
