@@ -40,7 +40,7 @@ const SuccessSite = () => {
             Crear otro Site
           </Link>
           <Link
-            to="/clientes/requerimiento/nuevo"
+            to="/clientes/site/requerimiento/nuevo"
             className="primary-button"
             state={{ customer, site }}
           >

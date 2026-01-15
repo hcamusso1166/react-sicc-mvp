@@ -22,6 +22,8 @@ const CreateRequirement = () => {
   const [formState, setFormState] = useState({
     status: STATUS_OPTIONS[0].value,
     nombre: '',
+    fechaInicio: '',
+    fechaProyectadaFin: '',
   })
   const [formErrors, setFormErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
@@ -40,6 +42,14 @@ const CreateRequirement = () => {
     }
     if (!values.nombre.trim()) {
       errors.nombre = 'El nombre es obligatorio.'
+          } else if (values.nombre.trim().length > 255) {
+      errors.nombre = 'El nombre no puede superar 255 caracteres.'
+    }
+    if (!values.fechaInicio) {
+      errors.fechaInicio = 'La fecha de inicio es obligatoria.'
+    }
+    if (!values.fechaProyectadaFin) {
+      errors.fechaProyectadaFin = 'La fecha fin proyectada es obligatoria.'
     }
     return errors
   }
@@ -52,8 +62,8 @@ const CreateRequirement = () => {
     if (Object.keys(nextErrors).length > 0) {
       return
     }
-    if (!customerId || !siteId) {
-      setSubmitError('Faltan datos del cliente o del site para el requerimiento.')
+    if (!siteId) {
+      setSubmitError('Faltan datos del site para el requerimiento.')
       return
     }
 
@@ -62,8 +72,9 @@ const CreateRequirement = () => {
       await createRequirement({
         status: formState.status,
         nombre: formState.nombre.trim(),
-        idCliente: customerId,
-        idSite: siteId,
+        fechaInicio: formState.fechaInicio,
+        fechaProyectadaFin: formState.fechaProyectadaFin,
+        idSites: siteId,
       })
       navigate('/clientes', { replace: true })
     } catch (error) {
@@ -120,10 +131,41 @@ const CreateRequirement = () => {
                 value={formState.nombre}
                 onChange={(event) => updateField('nombre', event.target.value)}
                 placeholder="Nombre..."
+                maxLength={255}
                 required
               />
               {formErrors.nombre && (
                 <span className="field-error">{formErrors.nombre}</span>
+              )}
+            </label>
+            <label className="form-field">
+              <span className="form-label">Fecha de inicio</span>
+              <input
+                className="text-input"
+                type="date"
+                value={formState.fechaInicio}
+                onChange={(event) => updateField('fechaInicio', event.target.value)}
+                required
+              />
+              {formErrors.fechaInicio && (
+                <span className="field-error">{formErrors.fechaInicio}</span>
+              )}
+            </label>
+            <label className="form-field">
+              <span className="form-label">Fecha fin proyectada</span>
+              <input
+                className="text-input"
+                type="date"
+                value={formState.fechaProyectadaFin}
+                onChange={(event) =>
+                  updateField('fechaProyectadaFin', event.target.value)
+                }
+                required
+              />
+              {formErrors.fechaProyectadaFin && (
+                <span className="field-error">
+                  {formErrors.fechaProyectadaFin}
+                </span>
               )}
             </label>
           </div>
