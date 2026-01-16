@@ -2,11 +2,13 @@ import { Route, Routes } from 'react-router-dom'
 
 import CustomersPage from '../pages/CustomersSICC'
 import CreateCustomer from '../pages/CustomersSICC/CreateCustomer'
+import CreateProvider from '../pages/CustomersSICC/CreateProveedor'
 import CreateRequirement from '../pages/CustomersSICC/CreateRequirement'
 import CreateSite from '../pages/CustomersSICC/CreateSite'
 import DeleteCustomer from '../pages/CustomersSICC/DeleteCustomer'
 import EditCustomer from '../pages/CustomersSICC/EditCustomer'
 import SuccessCustomer from '../pages/CustomersSICC/SuccessCustomer'
+import SuccessRequerimient from '../pages/CustomersSICC/SuccessRequerimient'
 import SuccessSite from '../pages/CustomersSICC/SuccessSite'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
@@ -71,8 +73,13 @@ const AppRoutes = ({
       <Route path="/clientes/site/nuevo" element={<CreateSite />} />
       <Route path="/clientes/site/success" element={<SuccessSite />} />
       <Route
-        path="/clientes/requerimiento/nuevo"
+        path="/clientes/site/requerimiento/nuevo"
         element={<CreateRequirement />}
+      />
+      <Route path="/clientes/proveedor/nuevo" element={<CreateProvider />} />
+      <Route
+        path="/clientes/requerimiento/success"
+        element={<SuccessRequerimient />}
       />
       <Route path="/clientes/:id/editar" element={<EditCustomer />} />
       <Route path="/clientes/:id/borrar" element={<DeleteCustomer />} />

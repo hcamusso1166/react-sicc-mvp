@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
-import { createRequirement } from '../../services/directus'
+import { createProvider } from '../../services/directus'
 
 const STATUS_OPTIONS = [
   { label: 'Publicado', value: 'published' },
@@ -9,21 +9,23 @@ const STATUS_OPTIONS = [
   { label: 'Archivado', value: 'archived' },
 ]
 
-const CreateRequirement = () => {
+const CreateProvider = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const customer = location.state?.customer
   const site = location.state?.site
+  const requirement = location.state?.requirement
+
   const customerName = customer?.name || 'cliente'
   const siteName = site?.nombre || 'site'
+  const requirementName = requirement?.nombre || 'requerimiento'
+  const requirementId = requirement?.id
   const customerId = customer?.id
-  const siteId = site?.id
 
   const [formState, setFormState] = useState({
     status: STATUS_OPTIONS[0].value,
     nombre: '',
-    fechaInicio: '',
-    fechaProyectadaFin: '',
+    cuit: '',
   })
   const [formErrors, setFormErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
@@ -42,14 +44,11 @@ const CreateRequirement = () => {
     }
     if (!values.nombre.trim()) {
       errors.nombre = 'El nombre es obligatorio.'
-          } else if (values.nombre.trim().length > 255) {
-      errors.nombre = 'El nombre no puede superar 255 caracteres.'
+    } else if (values.nombre.trim().length > 120) {
+      errors.nombre = 'El nombre no puede superar 120 caracteres.'
     }
-    if (!values.fechaInicio) {
-      errors.fechaInicio = 'La fecha de inicio es obligatoria.'
-    }
-    if (!values.fechaProyectadaFin) {
-      errors.fechaProyectadaFin = 'La fecha fin proyectada es obligatoria.'
+    if (values.cuit && values.cuit.trim().length > 20) {
+      errors.cuit = 'El CUIT no puede superar 20 caracteres.'
     }
     return errors
   }
@@ -62,40 +61,24 @@ const CreateRequirement = () => {
     if (Object.keys(nextErrors).length > 0) {
       return
     }
-    if (!siteId) {
-      setSubmitError('Faltan datos del site para el requerimiento.')
+    if (!requirementId) {
+      setSubmitError('No se encontró el requerimiento asociado al proveedor.')
       return
     }
 
     setSubmitting(true)
     try {
-      const createdRequirement = await createRequirement({
+      await createProvider({
         status: formState.status,
         nombre: formState.nombre.trim(),
-        fechaInicio: formState.fechaInicio,
-        fechaProyectadaFin: formState.fechaProyectadaFin,
-        idSites: siteId,
+        CUIT: formState.cuit.trim() || null,
+        idRequerimiento: requirementId,
       })
-      navigate('/clientes/requerimiento/success', {
-        state: {
-          customer: {
-            id: customerId,
-            name: customerName,
-          },
-          site: {
-            id: siteId,
-            nombre: siteName,
-          },
-          requirement: {
-            id: createdRequirement?.id,
-            nombre: createdRequirement?.nombre || formState.nombre.trim(),
-            fechaInicio: createdRequirement?.fechaInicio || formState.fechaInicio,
-            fechaProyectadaFin:
-              createdRequirement?.fechaProyectadaFin ||
-              formState.fechaProyectadaFin,
-          },
-        },
-      })
+      if (customerId) {
+        navigate(`/manager?customerId=${customerId}`, { replace: true })
+      } else {
+        navigate('/manager', { replace: true })
+      }
     } catch (error) {
       setSubmitError(error.message)
     } finally {
@@ -107,23 +90,48 @@ const CreateRequirement = () => {
     <section className="customers-view">
       <header className="dashboard-header">
         <div>
-          <h2>Nuevo requerimiento</h2>
+          <h2>Nuevo proveedor</h2>
           <p className="muted">
-            Asociado al cliente {customerName} y al site {siteName}.
+            Asociado al cliente {customerName}, al site {siteName} y al
+            requerimiento {requirementName}.
           </p>
         </div>
       </header>
       <div className="panel-card">
+        {!requirementId && (
+          <div className="error-banner">
+            No se detectó un requerimiento para asociar el proveedor.
+          </div>
+        )}
         {submitError && <div className="error-banner">{submitError}</div>}
         <form className="customer-form" onSubmit={handleSubmit}>
           <div className="customer-form-grid">
             <label className="form-field">
               <span className="form-label">Cliente</span>
-              <input className="text-input" type="text" value={customerName} disabled />
+              <input
+                className="text-input"
+                type="text"
+                value={customerName}
+                disabled
+              />
             </label>
             <label className="form-field">
               <span className="form-label">Site</span>
-              <input className="text-input" type="text" value={siteName} disabled />
+              <input
+                className="text-input"
+                type="text"
+                value={siteName}
+                disabled
+              />
+            </label>
+            <label className="form-field">
+              <span className="form-label">Requerimiento</span>
+              <input
+                className="text-input"
+                type="text"
+                value={requirementName}
+                disabled
+              />
             </label>
             <label className="form-field">
               <span className="form-label">Estado</span>
@@ -143,14 +151,14 @@ const CreateRequirement = () => {
               )}
             </label>
             <label className="form-field">
-              <span className="form-label">Nombre del requerimiento</span>
+              <span className="form-label">Nombre del proveedor</span>
               <input
                 className="text-input"
                 type="text"
                 value={formState.nombre}
                 onChange={(event) => updateField('nombre', event.target.value)}
                 placeholder="Nombre..."
-                maxLength={255}
+                maxLength={120}
                 required
               />
               {formErrors.nombre && (
@@ -158,42 +166,26 @@ const CreateRequirement = () => {
               )}
             </label>
             <label className="form-field">
-              <span className="form-label">Fecha de inicio</span>
+              <span className="form-label">CUIT</span>
               <input
                 className="text-input"
-                type="date"
-                value={formState.fechaInicio}
-                onChange={(event) => updateField('fechaInicio', event.target.value)}
-                required
+                type="text"
+                value={formState.cuit}
+                onChange={(event) => updateField('cuit', event.target.value)}
+                placeholder="20-12345678-9"
+                maxLength={20}
               />
-              {formErrors.fechaInicio && (
-                <span className="field-error">{formErrors.fechaInicio}</span>
-              )}
-            </label>
-            <label className="form-field">
-              <span className="form-label">Fecha fin proyectada</span>
-              <input
-                className="text-input"
-                type="date"
-                value={formState.fechaProyectadaFin}
-                onChange={(event) =>
-                  updateField('fechaProyectadaFin', event.target.value)
-                }
-                required
-              />
-              {formErrors.fechaProyectadaFin && (
-                <span className="field-error">
-                  {formErrors.fechaProyectadaFin}
-                </span>
+              {formErrors.cuit && (
+                <span className="field-error">{formErrors.cuit}</span>
               )}
             </label>
           </div>
           <div className="form-actions">
-            <Link className="secondary-button" to="/clientes">
+            <Link className="secondary-button" to="/manager">
               Cancelar
             </Link>
             <button className="primary-button" type="submit" disabled={submitting}>
-              {submitting ? 'Guardando...' : 'Guardar requerimiento'}
+              {submitting ? 'Guardando...' : 'Guardar proveedor'}
             </button>
           </div>
         </form>
@@ -202,4 +194,4 @@ const CreateRequirement = () => {
   )
 }
 
-export default CreateRequirement
+export default CreateProvider
