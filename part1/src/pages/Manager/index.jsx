@@ -154,7 +154,7 @@ const ManagerPage = () => {
   const providersByRequirement = useMemo(() => {
     if (!detail?.providers) return {}
     return groupBy(detail.providers, (provider) =>
-      getRelationId(provider.idRequerimiento || provider.idRequerimientos),
+      getRelationId(provider.idRequerimientos),
     )
   }, [detail])
 
@@ -262,7 +262,7 @@ const ManagerPage = () => {
           </Link>
         </div>
       </header>
-{detailError && (
+        {detailError && (
         <div className="error-banner">
           No se pudo cargar el detalle. {detailError}
         </div>

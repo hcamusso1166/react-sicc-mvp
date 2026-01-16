@@ -9,6 +9,16 @@ const STATUS_OPTIONS = [
   { label: 'Archivado', value: 'archived' },
 ]
 
+const slugify = (value) =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+
 const CreateProvider = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -68,11 +78,13 @@ const CreateProvider = () => {
 
     setSubmitting(true)
     try {
+      const urlSlug = slugify(formState.nombre) || formState.nombre.trim()
       await createProvider({
         status: formState.status,
         nombre: formState.nombre.trim(),
         CUIT: formState.cuit.trim() || null,
-        idRequerimiento: requirementId,
+        idRequerimientos: requirementId,
+        urlSlug,
       })
       if (customerId) {
         navigate(`/manager?customerId=${customerId}`, { replace: true })
@@ -172,7 +184,7 @@ const CreateProvider = () => {
                 type="text"
                 value={formState.cuit}
                 onChange={(event) => updateField('cuit', event.target.value)}
-                placeholder="20-12345678-9"
+                placeholder="NN-NNNNNNNN-N"
                 maxLength={20}
               />
               {formErrors.cuit && (

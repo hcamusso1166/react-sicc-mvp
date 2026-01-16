@@ -205,15 +205,10 @@ const fetchManagerCustomerDetail = async (customerId) => {
   if (requirementIds.length) {
     const providerQuery = new URLSearchParams({
       'sort[]': 'nombre',
-      fields:
-        'id,nombre,name,razonSocial,CUIT,status,idRequerimiento,idRequerimientos',
+      fields: 'id,nombre,name,razonSocial,CUIT,status,idRequerimientos',
     })
     providerQuery.append(
-      'filter[_or][0][idRequerimiento][_in]',
-      requirementIds.join(','),
-    )
-    providerQuery.append(
-      'filter[_or][1][idRequerimientos][_in]',
+      'filter[idRequerimientos][_in]',
       requirementIds.join(','),
     )
     providersResponse = await fetchJSON(
