@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import './App.css'
 import DashboardLayout from './components/Layout/DashboardLayout'
+import LoginPage from './pages/Login'
 import AppRoutes from './routes/AppRoutes'
 import { fetchCustomersPage, fetchDashboardData } from './services/directus'
 
@@ -19,30 +20,6 @@ const CUSTOMERS_PAGE_SIZE = 6
 const getStatusLabel = (value) => {
   if (!value) return 'Sin estado'
   return value.toString().replace(/_/g, ' ')
-}
-
-const LoginScreen = ({ onLogin }) => {
-  return (
-    <div className="login-screen">
-      <header className="login-header">
-        <div className="logo">SICC</div>
-      </header>
-      <div className="login-card">
-        <div className="login-copy">
-          <h1>
-            Bienvenido a SICC. Sistema Integral de Control de Contratistas.
-          </h1>
-            <p>Inicia sesión para acceder al panel de gestión documental.</p>
-          <button type="button" className="primary-button" onClick={onLogin}>
-            Entrar al Dashboard
-          </button>
-        </div>
-        <div className="login-illustration">
-          <div className="login-mockup" />
-        </div>
-      </div>
-    </div>
-  )
 }
 
 const App = () => {
@@ -135,7 +112,7 @@ const App = () => {
   }, [isLoggedIn, location.pathname, customersPage, customerSearch])
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+        return <LoginPage onLogin={() => setIsLoggedIn(true)} />
   }
 
   return (
