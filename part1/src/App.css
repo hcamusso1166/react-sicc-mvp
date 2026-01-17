@@ -343,6 +343,10 @@ body {
   font-size: 13px;
 }
 
+.form-field.compact .text-input {
+  max-width: 240px;
+}
+
 .form-label {
   font-weight: 600;
   color: #0f172a;
@@ -539,6 +543,14 @@ body {
   gap: 12px;
 }
 
+.manager-provider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .manager-provider-summary {
   display: flex;
   flex-wrap: wrap;
@@ -547,20 +559,22 @@ body {
   font-size: 14px;
 }
 
-.manager-provider-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+.manager-provider-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.manager-provider-grid h5 {
+.manager-provider-documents h5,
+.manager-subcard-header h5 {
   margin: 0 0 8px;
   font-size: 13px;
   text-transform: uppercase;
   color: #64748b;
 }
 
-.manager-provider-grid ul {
+.manager-provider-documents ul,
+.manager-subcard ul {
   padding-left: 18px;
   margin: 0;
   display: grid;
@@ -568,11 +582,23 @@ body {
   font-size: 13px;
 }
 
-.manager-subitem {
+.manager-provider-subcards {
+  display: grid;
+  gap: 12px;
+  margin-left: 18px;
+}
+
+.manager-subcard {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.manager-subcard ul li {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 4px;
 }
 
 @media (max-width: 900px) {

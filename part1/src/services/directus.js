@@ -33,6 +33,12 @@ const fetchJSON = async (url) => {
   return response.json()
 }
 
+const withCacheBust = (url, cacheBust) => {
+  if (!cacheBust) return url
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}cacheBust=${encodeURIComponent(cacheBust)}`
+}
+
 const safeFetchJSON = async (url) => {
   try {
     return await fetchJSON(url)
@@ -160,8 +166,12 @@ const fetchCustomersPage = async ({ page, searchTerm = '', pageSize }) => {
 }
 
 const fetchManagerCustomers = async () => {
+  const cacheBust = Date.now().toString()
   const response = await fetchJSON(
-    `${API_BASE}/items/${TABLES.clientes}?limit=-1&sort[]=name&fields=id,name,CUIT,status`,
+        withCacheBust(
+      `${API_BASE}/items/${TABLES.clientes}?limit=-1&sort[]=name&fields=id,name,CUIT,status`,
+      cacheBust,
+    ),
   )
   return response?.data ?? []
 }
@@ -173,31 +183,56 @@ const buildInFilter = (field, ids) => {
 }
 
 const fetchManagerCustomerDetail = async (customerId) => {
+  const cacheBust = Date.now().toString()
   const customerResponse = await fetchJSON(
-    `${API_BASE}/items/${TABLES.clientes}/${customerId}?fields=id,name,CUIT,status`,
+        withCacheBust(
+      `${API_BASE}/items/${TABLES.clientes}/${customerId}?fields=id,name,CUIT,status`,
+      cacheBust,
+    ),
   )
 
   const sitesResponse = await fetchJSON(
-    `${API_BASE}/items/${TABLES.sites}?${new URLSearchParams({
-      'filter[idCliente][_eq]': String(customerId),
-      'sort[]': 'nombre',
-      fields: 'id,nombre,status,urlSlug,idCliente',
-    }).toString()}`,
+    withCacheBust(
+      `${API_BASE}/items/${TABLES.sites}?${new URLSearchParams({
+        'filter[idCliente][_eq]': String(customerId),
+        'sort[]': 'nombre',
+        fields: 'id,nombre,status,urlSlug,idCliente',
+      }).toString()}`,
+      cacheBust,
+    ),
   )
 
   const sites = sitesResponse?.data ?? []
   const siteIds = sites.map((site) => site.id).filter(Boolean)
 
-  const requirementsResponse = siteIds.length
-    ? await fetchJSON(
-        `${API_BASE}/items/${TABLES.requerimientos}?${new URLSearchParams({
-          ...Object.fromEntries(buildInFilter('idSites', siteIds)),
-          'sort[]': 'nombre',
-          fields: 'id,nombre,status,fechaInicio,fechaProyectadaFin,idSites',
-        }).toString()}`,
+ let requirementsResponse = { data: [] }
+  if (siteIds.length) {
+    const requirementsQuery = new URLSearchParams({
+      'sort[]': 'nombre',
+      fields: 'id,nombre,status,fechaInicio,fechaProyectadaFin,idSites',
+    })
+    requirementsQuery.append('filter[idSites][_in]', siteIds.join(','))
+    requirementsResponse = await fetchJSON(
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.requerimientos}?${requirementsQuery.toString()}`,
+        cacheBust,
+      ),
+    )
+    if (!requirementsResponse?.data?.length) {
+      const fallbackQuery = new URLSearchParams({
+        'sort[]': 'nombre',
+        fields: 'id,nombre,status,fechaInicio,fechaProyectadaFin,idSites',
+      })
+      fallbackQuery.append('filter[idSites][id][_in]', siteIds.join(','))
+      requirementsResponse = await fetchJSON(
+        withCacheBust(
+          `${API_BASE}/items/${TABLES.requerimientos}?${fallbackQuery.toString()}`,
+          cacheBust,
+        ),
       )
-    : { data: [] }
-
+    }
+  }
+  
   const requirements = requirementsResponse?.data ?? []
   const requirementIds = requirements.map((req) => req.id).filter(Boolean)
 
@@ -212,7 +247,10 @@ const fetchManagerCustomerDetail = async (customerId) => {
       requirementIds.join(','),
     )
     providersResponse = await fetchJSON(
-      `${API_BASE}/items/${TABLES.proveedores}?${providerQuery.toString()}`,
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.proveedores}?${providerQuery.toString()}`,
+        cacheBust,
+      ),
     )
   }
 
@@ -221,21 +259,27 @@ const fetchManagerCustomerDetail = async (customerId) => {
 
   const personasResponse = providerIds.length
     ? await safeFetchJSON(
-        `${API_BASE}/items/${TABLES.personas}?${new URLSearchParams({
-          ...Object.fromEntries(buildInFilter('idProveedor', providerIds)),
-          'sort[]': 'nombre',
-          fields: 'id,nombre,apellido,documento,idProveedor',
-        }).toString()}`,
+        withCacheBust(
+          `${API_BASE}/items/${TABLES.personas}?${new URLSearchParams({
+            ...Object.fromEntries(buildInFilter('idProveedor', providerIds)),
+            'sort[]': 'nombre',
+            fields: 'id,nombre,apellido,DNI,idProveedor',
+          }).toString()}`,
+          cacheBust,
+        ),
       )
     : { data: [] }
 
   const vehiculosResponse = providerIds.length
     ? await safeFetchJSON(
-        `${API_BASE}/items/${TABLES.vehiculos}?${new URLSearchParams({
-          ...Object.fromEntries(buildInFilter('idProveedor', providerIds)),
-          'sort[]': 'dominio',
-          fields: 'id,dominio,patente,marca,modelo,idProveedor',
-        }).toString()}`,
+        withCacheBust(
+          `${API_BASE}/items/${TABLES.vehiculos}?${new URLSearchParams({
+            ...Object.fromEntries(buildInFilter('idProveedor', providerIds)),
+            'sort[]': 'dominio',
+            fields: 'id,dominio,marca,modelo,idProveedor',
+          }).toString()}`,
+          cacheBust,
+        ),
       )
     : { data: [] }
 
@@ -262,7 +306,10 @@ const fetchManagerCustomerDetail = async (customerId) => {
   const documentosResponse =
     providerIds.length || personaIds.length || vehiculoIds.length
       ? await safeFetchJSON(
-          `${API_BASE}/items/${TABLES.documentos}?${documentoQuery.toString()}`,
+          withCacheBust(
+            `${API_BASE}/items/${TABLES.documentos}?${documentoQuery.toString()}`,
+            cacheBust,
+          ),
         )
       : { data: [] }
 
@@ -301,6 +348,18 @@ const createProvider = async (payload) => {
   )
   return response?.data
 }
+const createPersona = async (payload) => {
+  const response = await postJSON(`${API_BASE}/items/${TABLES.personas}`, payload)
+  return response?.data
+}
+
+const createVehiculo = async (payload) => {
+  const response = await postJSON(
+    `${API_BASE}/items/${TABLES.vehiculos}`,
+    payload,
+  )
+  return response?.data
+}
 
 export {
   API_BASE,
@@ -317,4 +376,6 @@ export {
   createSite,
   createRequirement,
   createProvider,
+  createPersona,
+  createVehiculo,
 }

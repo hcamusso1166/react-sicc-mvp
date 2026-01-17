@@ -3,13 +3,17 @@ import { Route, Routes } from 'react-router-dom'
 import CustomersPage from '../pages/CustomersSICC'
 import CreateCustomer from '../pages/CustomersSICC/CreateCustomer'
 import CreateProvider from '../pages/CustomersSICC/CreateProveedor'
+import CreatePersona from '../pages/CustomersSICC/CreatePersona'
 import CreateRequirement from '../pages/CustomersSICC/CreateRequirement'
 import CreateSite from '../pages/CustomersSICC/CreateSite'
+import CreateVehiculo from '../pages/CustomersSICC/CreateVehiculo'
 import DeleteCustomer from '../pages/CustomersSICC/DeleteCustomer'
 import EditCustomer from '../pages/CustomersSICC/EditCustomer'
 import SuccessCustomer from '../pages/CustomersSICC/SuccessCustomer'
+import SuccessPersona from '../pages/CustomersSICC/SuccessPersona'
 import SuccessRequerimient from '../pages/CustomersSICC/SuccessRequerimient'
 import SuccessSite from '../pages/CustomersSICC/SuccessSite'
+import SuccessVehiculo from '../pages/CustomersSICC/SuccessVehiculo'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
 import ManagerPage from '../pages/Manager'
@@ -77,6 +81,22 @@ const AppRoutes = ({
         element={<CreateRequirement />}
       />
       <Route path="/clientes/proveedor/nuevo" element={<CreateProvider />} />
+      <Route
+        path="/clientes/proveedor/persona/nuevo"
+        element={<CreatePersona />}
+      />
+      <Route
+        path="/clientes/proveedor/persona/success"
+        element={<SuccessPersona />}
+      />
+      <Route
+        path="/clientes/proveedor/vehiculo/nuevo"
+        element={<CreateVehiculo />}
+      />
+      <Route
+        path="/clientes/proveedor/vehiculo/success"
+        element={<SuccessVehiculo />}
+      />
       <Route
         path="/clientes/requerimiento/success"
         element={<SuccessRequerimient />}

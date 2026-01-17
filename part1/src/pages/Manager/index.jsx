@@ -51,11 +51,18 @@ const getVehicleName = (vehiculo) => {
   if (!vehiculo) return 'Vehículo'
   return (
     vehiculo.dominio ||
-    vehiculo.patente ||
     vehiculo.modelo ||
     `Vehículo ${vehiculo.id ?? ''}`.trim()
   )
 }
+
+const getPersonaDocumento = (persona) => {
+  if (!persona) return '-'
+  return persona.DNI || persona.dni || persona.documento || '-'
+}
+
+const getVehiculoField = (value, fallback = '-') =>
+  value?.toString().trim() || fallback
 
 const getDocumentoName = (documento) => {
   if (!documento) return 'Documento'
@@ -175,16 +182,6 @@ const ManagerPage = () => {
   const documentosByProvider = useMemo(() => {
     if (!detail?.documentos) return {}
     return groupBy(detail.documentos, (doc) => getRelationId(doc.idProveedor))
-  }, [detail])
-
-  const documentosByPersona = useMemo(() => {
-    if (!detail?.documentos) return {}
-    return groupBy(detail.documentos, (doc) => getRelationId(doc.idPersona))
-  }, [detail])
-
-  const documentosByVehiculo = useMemo(() => {
-    if (!detail?.documentos) return {}
-    return groupBy(detail.documentos, (doc) => getRelationId(doc.idVehiculo))
   }, [detail])
 
   if (!customerId) {
@@ -346,100 +343,104 @@ const ManagerPage = () => {
                               key={provider.id}
                               className="manager-provider-card"
                             >
-                              <div className="manager-provider-summary">
-                                <strong>{getDisplayName(provider)}</strong>
-                                <span className="muted">
-                                  CUIT: {provider.CUIT || '-'}
-                                </span>
-                                <span className="muted">
-                                  Estado: {provider.status || 'Sin estado'}
-                                </span>
-                              </div>
-                              <div className="manager-provider-grid">
-                                <div>
-                                  <h5>Documentos requeridos</h5>
-                                  {providerDocuments.length === 0 && (
-                                    <p className="muted">
-                                      No hay documentos cargados.
-                                    </p>
-                                  )}
-                                  {providerDocuments.length > 0 && (
-                                    <ul>
-                                      {providerDocuments.map((documento) => (
-                                        <li key={documento.id}>
-                                          {getDocumentoName(documento)}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  )}
+<div className="manager-provider-top">
+                                <div className="manager-provider-summary">
+                                  <strong>{getDisplayName(provider)}</strong>
+                                  <span className="muted">
+                                    CUIT: {provider.CUIT || '-'}
+                                  </span>
+                                  <span className="muted">
+                                    Estado: {provider.status || 'Sin estado'}
+                                  </span>
                                 </div>
-                                <div>
-                                  <h5>Personas</h5>
+                                <div className="manager-provider-actions">
+                                  <Link
+                                    to="/clientes/proveedor/persona/nuevo"
+                                    className="primary-button small"
+                                    state={{ customer, site, requirement, provider }}
+                                  >
+                                    Crear Persona +
+                                  </Link>
+                                  <Link
+                                    to="/clientes/proveedor/vehiculo/nuevo"
+                                    className="primary-button small"
+                                    state={{ customer, site, requirement, provider }}
+                                  >
+                                    Crear Vehículo +
+                                  </Link>
+                                </div>
+                              </div>
+                              <div className="manager-provider-documents">
+                                <h5>Documentos requeridos</h5>
+                                {providerDocuments.length === 0 && (
+                                  <p className="muted">
+                                    No hay documentos cargados.
+                                  </p>
+                                )}
+                                {providerDocuments.length > 0 && (
+                                  <ul>
+                                    {providerDocuments.map((documento) => (
+                                      <li key={documento.id}>
+                                        {getDocumentoName(documento)}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                              <div className="manager-provider-subcards">
+                                <div className="manager-subcard">
+                                  <div className="manager-subcard-header">
+                                    <h5>Personas</h5>
+                                  </div>
                                   {providerPersonas.length === 0 && (
                                     <p className="muted">
                                       No hay personas registradas.
                                     </p>
                                   )}
-                                  {providerPersonas.map((persona) => {
-                                    const personaDocs =
-                                      documentosByPersona[persona.id] || []
-                                    return (
-                                      <div
-                                        key={persona.id}
-                                        className="manager-subitem"
-                                      >
-                                        <strong>{getPersonName(persona)}</strong>
-                                        {personaDocs.length === 0 && (
-                                          <p className="muted">
-                                            Sin documentos requeridos.
-                                          </p>
-                                        )}
-                                        {personaDocs.length > 0 && (
-                                          <ul>
-                                            {personaDocs.map((documento) => (
-                                              <li key={documento.id}>
-                                                {getDocumentoName(documento)}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
+                                  {providerPersonas.length > 0 && (
+                                    <ul>
+                                        {providerPersonas.map((persona) => (
+                                        <li key={persona.id}>
+                                          <strong>{getPersonName(persona)}</strong>
+                                          <span className="muted">
+                                            DNI: {getPersonaDocumento(persona)}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
                                 </div>
-                                <div>
-                                  <h5>Vehículos</h5>
+                                <div className="manager-subcard">
+                                  <div className="manager-subcard-header">
+                                    <h5>Vehículos</h5>
+                                  </div>
                                   {providerVehiculos.length === 0 && (
                                     <p className="muted">
                                       No hay vehículos registrados.
                                     </p>
                                   )}
-                                  {providerVehiculos.map((vehiculo) => {
-                                    const vehiculoDocs =
-                                      documentosByVehiculo[vehiculo.id] || []
-                                    return (
-                                      <div
-                                        key={vehiculo.id}
-                                        className="manager-subitem"
-                                      >
-                                        <strong>{getVehicleName(vehiculo)}</strong>
-                                        {vehiculoDocs.length === 0 && (
-                                          <p className="muted">
-                                            Sin documentos requeridos.
-                                          </p>
-                                        )}
-                                        {vehiculoDocs.length > 0 && (
-                                          <ul>
-                                            {vehiculoDocs.map((documento) => (
-                                              <li key={documento.id}>
-                                                {getDocumentoName(documento)}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
+                                   {providerVehiculos.length > 0 && (
+                                    <ul>
+                                      {providerVehiculos.map((vehiculo) => (
+                                        <li key={vehiculo.id}>
+                                          <strong>
+                                            {getVehicleName(vehiculo)}
+                                          </strong>
+                                          <span className="muted">
+                                            Dominio:{' '}
+                                            {getVehiculoField(vehiculo.dominio)}
+                                          </span>
+                                          <span className="muted">
+                                            Marca: {getVehiculoField(vehiculo.marca)}
+                                          </span>
+                                          <span className="muted">
+                                            Modelo:{' '}
+                                            {getVehiculoField(vehiculo.modelo)}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
                                 </div>
                               </div>
                             </div>
