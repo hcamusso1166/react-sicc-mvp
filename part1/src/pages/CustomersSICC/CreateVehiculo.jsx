@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Button from '../../components/Button'
 
 import { createVehiculo } from '../../services/directus'
 
@@ -246,9 +247,9 @@ const CreateVehiculo = () => {
             >
               Cancelar
             </Link>
-            <button className="primary-button" type="submit" disabled={submitting}>
+            <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar vehículo'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

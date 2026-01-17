@@ -1,3 +1,5 @@
+import Button from '../../components/Button'
+
 const LoginPage = ({ onLogin }) => {
   return (
     <div className="login-screen">
@@ -8,9 +10,9 @@ const LoginPage = ({ onLogin }) => {
         <div className="login-copy">
           <h1>Bienvenido a SICC. Sistema Integral de Control de Contratistas.</h1>
           <p>Inicia sesión para acceder al panel de gestión documental.</p>
-          <button type="button" className="primary-button" onClick={onLogin}>
+          <Button type="button" variant="primary" onClick={onLogin}>
             Entrar al Dashboard
-          </button>
+          </Button>
         </div>
         <div className="login-illustration">
           <div className="login-mockup" />

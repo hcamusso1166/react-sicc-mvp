@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Button from '../../components/Button'
 
 import { createRequirement } from '../../services/directus'
 
@@ -192,9 +193,9 @@ const CreateRequirement = () => {
             <Link className="secondary-button" to="/clientes">
               Cancelar
             </Link>
-            <button className="primary-button" type="submit" disabled={submitting}>
+            <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar requerimiento'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

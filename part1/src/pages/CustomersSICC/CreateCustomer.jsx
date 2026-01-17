@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Button from '../../components/Button'
 
 import { createCustomer } from '../../services/directus'
 
@@ -293,9 +294,9 @@ const CreateCustomer = () => {
             <Link to="/clientes" className="ghost-button">
               Cancelar
             </Link>
-            <button type="submit" className="primary-button" disabled={submitting}>
+            <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Creando...' : 'Crear Cliente'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

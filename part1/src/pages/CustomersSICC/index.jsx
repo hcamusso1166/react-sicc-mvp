@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Button from '../../components/Button'
 
 const CustomersPage = ({
   customerSearch,
@@ -19,13 +20,9 @@ const CustomersPage = ({
           <h2>Clientes</h2>
           <p className="muted">Listado de clientes registrados en el backend.</p>
         </div>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={onCustomersRefresh}
-        >
+        <Button type="button" variant="ghost" onClick={onCustomersRefresh}>
           Actualizar listado
-        </button>
+        </Button>
       </header>
       <div className="customers-toolbar">
         <div className="input-wrapper">
@@ -79,37 +76,38 @@ const CustomersPage = ({
         ))}
       </div>
       <div className="pagination">
-        <button
+        <Button
           type="button"
-          className="ghost-button"
+          variant="ghost"
           onClick={() => onCustomersPageChange(Math.max(1, customersPage - 1))}
           disabled={customersPage <= 1}
         >
           ◀
-        </button>
+        </Button>
         {Array.from({ length: totalCustomerPages }, (_, index) => {
           const page = index + 1
           return (
-            <button
+            <Button
               key={page}
               type="button"
-              className={`page-button${page === customersPage ? ' active' : ''}`}
+              variant="page"
+              isActive={page === customersPage}
               onClick={() => onCustomersPageChange(page)}
             >
               {page}
-            </button>
+            </Button>
           )
         })}
-        <button
+        <Button
           type="button"
-          className="ghost-button"
+          variant="ghost"
           onClick={() =>
             onCustomersPageChange(Math.min(totalCustomerPages, customersPage + 1))
           }
           disabled={customersPage >= totalCustomerPages}
         >
           ▶
-        </button>
+        </Button>
       </div>
     </section>
   )

@@ -1,3 +1,5 @@
+import Button from '../../components/Button'
+
 const PieChart = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0)
   const conicStops = data.reduce(
@@ -74,14 +76,14 @@ const HomePage = ({
     <>
       <header className="dashboard-header">
         <h2>Dashboard</h2>
-        <button
+        <Button
           type="button"
-          className="ghost-button"
+          variant="ghost"
           onClick={onRefresh}
           disabled={loading}
         >
           {loading ? 'Actualizando...' : 'Actualizar información'}
-        </button>
+        </Button>
       </header>
       {error && (
         <div className="error-banner">
@@ -134,14 +136,14 @@ const HomePage = ({
               </div>
             ))}
           </div>
-          <button
+          <Button
             type="button"
-            className="text-link"
+            variant="text"
             onClick={onRefresh}
             disabled={loading}
           >
             {loading ? 'Actualizando...' : 'Actualizar la información'}
-          </button>
+          </Button>
         </div>
       </section>
     </>

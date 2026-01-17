@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Button from '../../components/Button'
 
 import { createProvider } from '../../services/directus'
 
@@ -196,9 +197,9 @@ const CreateProvider = () => {
             <Link className="secondary-button" to="/manager">
               Cancelar
             </Link>
-            <button className="primary-button" type="submit" disabled={submitting}>
+            <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar proveedor'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
