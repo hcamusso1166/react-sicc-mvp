@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import { createRequirement } from '../../services/directus'
 
@@ -106,14 +107,10 @@ const CreateRequirement = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Nuevo requerimiento</h2>
-          <p className="muted">
-            Asociado al cliente {customerName} y al site {siteName}.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Nuevo requerimiento"
+        subtitle={`Asociado al cliente ${customerName} y al site ${siteName}.`}
+      />
       <div className="panel-card">
         {submitError && <div className="error-banner">{submitError}</div>}
         <form className="customer-form" onSubmit={handleSubmit}>

@@ -1,9 +1,9 @@
+import PageHeader from '../../components/PageHeader'
+
 const DocumentosVerificadosPage = () => {
   return (
     <section className="placeholder-view">
-      <header className="dashboard-header">
-        <h2>Documentos verificados</h2>
-      </header>
+      <PageHeader title="Documentos verificados" />
       <p className="muted">Reporte en construcción.</p>
     </section>
   )

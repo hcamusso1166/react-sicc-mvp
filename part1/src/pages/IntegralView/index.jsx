@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
+import PageHeader from '../../components/PageHeader'
 
 const IntegralViewPage = () => {
   const [searchParams] = useSearchParams()
@@ -6,9 +7,7 @@ const IntegralViewPage = () => {
 
   return (
     <section className="placeholder-view">
-      <header className="dashboard-header">
-        <h2>Integral View</h2>
-      </header>
+      <PageHeader title="Integral View" />
       <p className="muted">Sección en construcción.</p>
       <p>
         <strong>Customer ID:</strong> {customerId || 'No informado'}

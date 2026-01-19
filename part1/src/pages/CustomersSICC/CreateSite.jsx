@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import { createSite } from '../../services/directus'
 
@@ -98,14 +99,10 @@ const CreateSite = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Nuevo Site</h2>
-          <p className="muted">
-            Completá los datos para registrar un Site del cliente {customerName}.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Nuevo Site"
+        subtitle={`Completá los datos para registrar un Site del cliente ${customerName}.`}
+      />
       <div className="panel-card">
         {!customerId && (
           <div className="error-banner">

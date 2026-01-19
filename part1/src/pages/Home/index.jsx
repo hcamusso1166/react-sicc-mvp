@@ -1,4 +1,5 @@
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 const PieChart = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0)
@@ -74,17 +75,19 @@ const HomePage = ({
 }) => {
   return (
     <>
-      <header className="dashboard-header">
-        <h2>Dashboard</h2>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onRefresh}
-          disabled={loading}
-        >
-          {loading ? 'Actualizando...' : 'Actualizar información'}
-        </Button>
-      </header>
+      <PageHeader
+        title="Dashboard"
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            {loading ? 'Actualizando...' : 'Actualizar información'}
+          </Button>
+        }
+      />
       {error && (
         <div className="error-banner">
           No se pudo cargar la información del backend. {error}

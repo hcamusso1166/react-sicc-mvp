@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import PageHeader from '../../components/PageHeader'
 
 const SuccessSite = () => {
   const location = useLocation()
@@ -9,12 +10,10 @@ const SuccessSite = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Site creado</h2>
-          <p className="muted">El Site fue registrado correctamente.</p>
-        </div>
-      </header>
+      <PageHeader
+        title="Site creado"
+        subtitle="El Site fue registrado correctamente."
+      />
       <div className="panel-card">
         <div className="success-banner">Alta del Site registrada con éxito.</div>
         <p className="success-highlight">

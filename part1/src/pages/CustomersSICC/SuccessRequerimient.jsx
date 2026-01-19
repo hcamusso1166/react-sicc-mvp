@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import PageHeader from '../../components/PageHeader'
 
 const SuccessRequerimient = () => {
   const location = useLocation()
@@ -11,14 +12,10 @@ const SuccessRequerimient = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Requerimiento creado</h2>
-          <p className="muted">
-            El requerimiento fue registrado correctamente en el backend.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Requerimiento creado"
+        subtitle="El requerimiento fue registrado correctamente en el backend."
+      />
       <div className="panel-card">
         <div className="success-banner">
           Alta del Requerimiento registrada con éxito.

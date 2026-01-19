@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import { createProvider } from '../../services/directus'
 
@@ -101,15 +102,10 @@ const CreateProvider = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Nuevo proveedor</h2>
-          <p className="muted">
-            Asociado al cliente {customerName}, al site {siteName} y al
-            requerimiento {requirementName}.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Nuevo proveedor"
+        subtitle={`Asociado al cliente ${customerName}, al site ${siteName} y al requerimiento ${requirementName}.`}
+      />
       <div className="panel-card">
         {!requirementId && (
           <div className="error-banner">

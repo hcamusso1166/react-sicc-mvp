@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import { createPersona } from '../../services/directus'
 
@@ -100,15 +101,10 @@ const CreatePersona = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Nueva persona</h2>
-          <p className="muted">
-            Asociada al cliente {customerName}, al site {siteName}, al
-            requerimiento {requirementName} y al proveedor {providerName}.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Nueva persona"
+        subtitle={`Asociada al cliente ${customerName}, al site ${siteName}, al requerimiento ${requirementName} y al proveedor ${providerName}.`}
+      />
       <div className="panel-card">
         {!providerId && (
           <div className="error-banner">

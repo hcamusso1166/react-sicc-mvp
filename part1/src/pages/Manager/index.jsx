@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import {
   fetchManagerCustomerDetail,
@@ -187,14 +189,10 @@ const ManagerPage = () => {
   if (!customerId) {
     return (
       <section className="manager-view">
-        <header className="dashboard-header">
-          <div>
-            <h2>Manager</h2>
-            <p className="muted">
-              Elegí un cliente para revisar el árbol completo de información.
-            </p>
-          </div>
-        </header>
+        <PageHeader
+          title="Manager"
+          subtitle="Elegí un cliente para revisar el árbol completo de información."
+        />
         <div className="manager-search">
           <span className="manager-search-icon">🔍</span>
           <input
@@ -238,27 +236,27 @@ const ManagerPage = () => {
 
   return (
     <section className="manager-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Cliente: {customer?.name || 'Sin nombre'}</h2>
-          <p className="muted">
-            CUIT: {customer?.CUIT || '-'} · Estado:{' '}
-            {customer?.status || 'Sin estado'}
-          </p>
-        </div>
-        <div className="manager-header-actions">
-          <Link to="/manager" className="secondary-button">
-            Volver
-          </Link>
-          <Link
-            to="/clientes/site/nuevo"
-            className="primary-button"
-            state={{ customer }}
-          >
-            Crear Site +
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        title={`Cliente: ${customer?.name || 'Sin nombre'}`}
+        subtitle={`CUIT: ${customer?.CUIT || '-'} · Estado: ${
+          customer?.status || 'Sin estado'
+        }`}
+        actionsClassName="manager-header-actions"
+        actions={
+          <>
+            <Link to="/manager" className="secondary-button">
+              Volver
+            </Link>
+            <Link
+              to="/clientes/site/nuevo"
+              className="primary-button"
+              state={{ customer }}
+            >
+              Crear Site +
+            </Link>
+          </>
+        }
+      />
         {detailError && (
         <div className="error-banner">
           No se pudo cargar el detalle. {detailError}
@@ -319,12 +317,9 @@ const ManagerPage = () => {
                       <div className="manager-provider-section">
                         <div className="manager-provider-header">
                           <span>Proveedores</span>
-                          <button
-                            type="button"
-                            className="ghost-button small"
-                          >
+                          <Button type="button" variant="ghost" size="small">
                             Crear Documentos Requerido
-                          </button>
+                          </Button>
                         </div>
                         {requirementProviders.length === 0 && (
                           <p className="muted">

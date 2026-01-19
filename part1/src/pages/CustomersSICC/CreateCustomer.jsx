@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 import { createCustomer } from '../../services/directus'
 
@@ -122,14 +123,10 @@ const CreateCustomer = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Nuevo cliente</h2>
-          <p className="muted">
-            Completá los datos para registrar un nuevo cliente en el backend.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Nuevo cliente"
+        subtitle="Completá los datos para registrar un nuevo cliente en el backend."
+      />
       <div className="panel-card">
         <form className="customer-form" onSubmit={handleSubmit}>
           <div className="customer-form-grid">

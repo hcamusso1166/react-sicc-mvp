@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import PageHeader from '../../components/PageHeader'
 
 const SuccessVehiculo = () => {
   const location = useLocation()
@@ -13,14 +14,10 @@ const SuccessVehiculo = () => {
 
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Vehículo creado</h2>
-          <p className="muted">
-            El vehículo fue registrado correctamente en el backend.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        title="Vehículo creado"
+        subtitle="El vehículo fue registrado correctamente en el backend."
+      />
       <div className="panel-card">
         <div className="success-banner">Alta de vehículo registrada con éxito.</div>
         <p className="success-highlight">

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Button from '../../components/Button'
+import PageHeader from '../../components/PageHeader'
 
 const CustomersPage = ({
   customerSearch,
@@ -15,15 +16,15 @@ const CustomersPage = ({
 }) => {
   return (
     <section className="customers-view">
-      <header className="dashboard-header">
-        <div>
-          <h2>Clientes</h2>
-          <p className="muted">Listado de clientes registrados en el backend.</p>
-        </div>
-        <Button type="button" variant="ghost" onClick={onCustomersRefresh}>
-          Actualizar listado
-        </Button>
-      </header>
+      <PageHeader
+        title="Clientes"
+        subtitle="Listado de clientes registrados en el backend."
+        actions={
+          <Button type="button" variant="ghost" onClick={onCustomersRefresh}>
+            Actualizar listado
+          </Button>
+        }
+      />
       <div className="customers-toolbar">
         <div className="input-wrapper">
           <input
