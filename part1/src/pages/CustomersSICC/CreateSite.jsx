@@ -2,24 +2,20 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
-
+import FormActions from '../../components/Form/FormActions'
+import FormField from '../../components/Form/FormField'
+import FormGrid from '../../components/Form/FormGrid'
+import SelectInput from '../../components/Form/SelectInput'
+import TextInput from '../../components/Form/TextInput'
 import { createSite } from '../../services/directus'
+import slugify from '../../utils/slugify'
+import { isBlank } from '../../utils/validation'
 
 const STATUS_OPTIONS = [
   { label: 'Publicado', value: 'published' },
   { label: 'Borrador', value: 'draft' },
   { label: 'Archivado', value: 'archived' },
 ]
-
-const slugify = (value) =>
-  value
-    .toString()
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
 
 const CreateSite = () => {
   const location = useLocation()
@@ -44,10 +40,10 @@ const CreateSite = () => {
 
   const validate = (values) => {
     const errors = {}
-    if (!values.status) {
+    if (isBlank(values.status)) {
       errors.status = 'Seleccioná un estado.'
     }
-    if (!values.nombre.trim()) {
+    if (isBlank(values.nombre)) {
       errors.nombre = 'El nombre es obligatorio.'
     } else if (values.nombre.trim().length > 100) {
       errors.nombre = 'El nombre no puede superar 100 caracteres.'
@@ -111,20 +107,12 @@ const CreateSite = () => {
         )}
         {submitError && <div className="error-banner">{submitError}</div>}
         <form className="customer-form" onSubmit={handleSubmit}>
-          <div className="customer-form-grid">
-            <label className="form-field">
-              <span className="form-label">Cliente</span>
-              <input
-                className="text-input"
-                type="text"
-                value={customerName}
-                disabled
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">Estado</span>
-              <select
-                className="text-input"
+          <FormGrid>
+            <FormField label="Cliente">
+              <TextInput type="text" value={customerName} disabled />
+            </FormField>
+            <FormField label="Estado" error={formErrors.status}>
+              <SelectInput
                 value={formState.status}
                 onChange={(event) => updateField('status', event.target.value)}
               >
@@ -133,15 +121,10 @@ const CreateSite = () => {
                     {option.label}
                   </option>
                 ))}
-              </select>
-              {formErrors.status && (
-                <span className="field-error">{formErrors.status}</span>
-              )}
-            </label>
-            <label className="form-field">
-              <span className="form-label">Nombre del Site</span>
-              <input
-                className="text-input"
+              </SelectInput>
+            </FormField>
+            <FormField label="Nombre del Site" error={formErrors.nombre}>
+              <TextInput
                 type="text"
                 value={formState.nombre}
                 onChange={(event) => updateField('nombre', event.target.value)}
@@ -149,19 +132,16 @@ const CreateSite = () => {
                 maxLength={100}
                 required
               />
-              {formErrors.nombre && (
-                <span className="field-error">{formErrors.nombre}</span>
-              )}
-            </label>
-          </div>
-          <div className="form-actions">
+            </FormField>
+          </FormGrid>
+          <FormActions>             
             <Link className="secondary-button" to="/clientes">
               Cancelar
             </Link>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar Site'}
             </Button>
-          </div>
+          </FormActions>
         </form>
       </div>
     </section>

@@ -2,8 +2,14 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
-
+import FormActions from '../../components/Form/FormActions'
+import FormField from '../../components/Form/FormField'
+import FormGrid from '../../components/Form/FormGrid'
+import SelectInput from '../../components/Form/SelectInput'
+import TextInput from '../../components/Form/TextInput'
 import { createProvider } from '../../services/directus'
+import slugify from '../../utils/slugify'
+import { isBlank } from '../../utils/validation'
 
 const STATUS_OPTIONS = [
   { label: 'Publicado', value: 'published' },
@@ -11,17 +17,7 @@ const STATUS_OPTIONS = [
   { label: 'Archivado', value: 'archived' },
 ]
 
-const slugify = (value) =>
-  value
-    .toString()
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
-
-const CreateProvider = () => {
+  const CreateProvider = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const customer = location.state?.customer
@@ -51,10 +47,10 @@ const CreateProvider = () => {
 
   const validate = (values) => {
     const errors = {}
-    if (!values.status) {
+    if (isBlank(values.status)) {
       errors.status = 'Seleccioná un estado.'
     }
-    if (!values.nombre.trim()) {
+    if (isBlank(values.nombre)) {
       errors.nombre = 'El nombre es obligatorio.'
     } else if (values.nombre.trim().length > 120) {
       errors.nombre = 'El nombre no puede superar 120 caracteres.'
@@ -114,38 +110,18 @@ const CreateProvider = () => {
         )}
         {submitError && <div className="error-banner">{submitError}</div>}
         <form className="customer-form" onSubmit={handleSubmit}>
-          <div className="customer-form-grid">
-            <label className="form-field">
-              <span className="form-label">Cliente</span>
-              <input
-                className="text-input"
-                type="text"
-                value={customerName}
-                disabled
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">Site</span>
-              <input
-                className="text-input"
-                type="text"
-                value={siteName}
-                disabled
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">Requerimiento</span>
-              <input
-                className="text-input"
-                type="text"
-                value={requirementName}
-                disabled
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">Estado</span>
-              <select
-                className="text-input"
+          <FormGrid>
+            <FormField label="Cliente">
+              <TextInput type="text" value={customerName} disabled />
+            </FormField>
+            <FormField label="Site">
+              <TextInput type="text" value={siteName} disabled />
+            </FormField>
+            <FormField label="Requerimiento">
+              <TextInput type="text" value={requirementName} disabled />
+            </FormField>
+            <FormField label="Estado" error={formErrors.status}>
+              <SelectInput         
                 value={formState.status}
                 onChange={(event) => updateField('status', event.target.value)}
               >
@@ -154,15 +130,10 @@ const CreateProvider = () => {
                     {option.label}
                   </option>
                 ))}
-              </select>
-              {formErrors.status && (
-                <span className="field-error">{formErrors.status}</span>
-              )}
-            </label>
-            <label className="form-field">
-              <span className="form-label">Nombre del proveedor</span>
-              <input
-                className="text-input"
+              </SelectInput>
+            </FormField>
+            <FormField label="Nombre del proveedor" error={formErrors.nombre}>
+              <TextInput
                 type="text"
                 value={formState.nombre}
                 onChange={(event) => updateField('nombre', event.target.value)}
@@ -170,33 +141,25 @@ const CreateProvider = () => {
                 maxLength={120}
                 required
               />
-              {formErrors.nombre && (
-                <span className="field-error">{formErrors.nombre}</span>
-              )}
-            </label>
-            <label className="form-field">
-              <span className="form-label">CUIT</span>
-              <input
-                className="text-input"
+            </FormField>
+            <FormField label="CUIT" error={formErrors.cuit}>
+              <TextInput
                 type="text"
                 value={formState.cuit}
                 onChange={(event) => updateField('cuit', event.target.value)}
                 placeholder="NN-NNNNNNNN-N"
                 maxLength={20}
               />
-              {formErrors.cuit && (
-                <span className="field-error">{formErrors.cuit}</span>
-              )}
-            </label>
-          </div>
-          <div className="form-actions">
+            </FormField>
+          </FormGrid>
+          <FormActions>         
             <Link className="secondary-button" to="/manager">
               Cancelar
             </Link>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar proveedor'}
             </Button>
-          </div>
+          </FormActions>
         </form>
       </div>
     </section>
