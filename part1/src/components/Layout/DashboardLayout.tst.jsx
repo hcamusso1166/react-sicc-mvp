@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import DashboardLayout from './DashboardLayout'
 
 const renderLayout = (props) =>
@@ -34,5 +34,42 @@ describe('DashboardLayout', () => {
     expect(markup).toContain('Portal')
     expect(markup).toContain('Reports')
     expect(markup).not.toContain('Sign Out')
+  })
+
+  it('merges class names for layout sections', () => {
+    const markup = renderLayout({
+      menuItems: [{ label: 'Docs', to: '/docs' }],
+      className: 'layout-root',
+      sidebarClassName: 'layout-sidebar',
+      menuClassName: 'layout-menu',
+      contentClassName: 'layout-content',
+    })
+
+    expect(markup).toContain('dashboard layout-root')
+    expect(markup).toContain('sidebar layout-sidebar')
+    expect(markup).toContain('sidebar-menu layout-menu')
+    expect(markup).toContain('dashboard-content layout-content')
+  })
+
+  it('supports custom logo content and menu rendering', () => {
+    const renderMenuItem = vi.fn((item) => (
+      <a className="custom-link" href={item.to}>
+        {item.label}
+      </a>
+    ))
+
+    const markup = renderLayout({
+      menuItems: [{ label: 'Custom', to: '/custom' }],
+      logo: <strong>Portal</strong>,
+      renderMenuItem,
+    })
+
+    expect(renderMenuItem).toHaveBeenCalledWith(
+      { label: 'Custom', to: '/custom' },
+      0,
+    )
+    expect(markup).toContain('<strong>Portal</strong>')
+    expect(markup).toContain('custom-link')
+    expect(markup).toContain('Custom')
   })
 })
