@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ErrorBanner } from '../../components/Banner'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
 
@@ -40,9 +41,9 @@ const CustomersPage = ({
         </Link>
       </div>
       {customersError && (
-        <div className="error-banner">
+        <ErrorBanner>
           No se pudo cargar el listado. {customersError}
-        </div>
+        </ErrorBanner>
       )}
       <div className="customers-table">
         <div className="customers-row customers-header">

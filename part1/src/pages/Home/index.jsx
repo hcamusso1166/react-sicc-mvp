@@ -1,5 +1,7 @@
+import { ErrorBanner } from '../../components/Banner'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
+import PanelCard from '../../components/PanelCard'
 
 const PieChart = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0)
@@ -89,9 +91,9 @@ const HomePage = ({
         }
       />
       {error && (
-        <div className="error-banner">
+        <ErrorBanner>
           No se pudo cargar la información del backend. {error}
-        </div>
+        </ErrorBanner>
       )}
       <section className="stats-grid">
         <div className="stat-card">
@@ -112,14 +114,14 @@ const HomePage = ({
         </div>
       </section>
       <section className="dashboard-panels">
-        <div className="panel-card">
+        <PanelCard>
           <div className="panel-header">
             <h3>Documentos por estado</h3>
             {loading && <span className="muted">Cargando...</span>}
           </div>
           <PieChart data={statusData} />
-        </div>
-        <div className="panel-card">
+        </PanelCard>
+        <PanelCard>
           <div className="panel-header">
             <h3>Documentos a presentar</h3>
           </div>
@@ -147,7 +149,7 @@ const HomePage = ({
           >
             {loading ? 'Actualizando...' : 'Actualizar la información'}
           </Button>
-        </div>
+        </PanelCard>
       </section>
     </>
   )

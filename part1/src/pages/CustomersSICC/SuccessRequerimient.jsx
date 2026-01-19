@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
+import { SuccessBanner } from '../../components/Banner'
 import PageHeader from '../../components/PageHeader'
+import PanelCard from '../../components/PanelCard'
 
 const SuccessRequerimient = () => {
   const location = useLocation()
@@ -16,10 +18,10 @@ const SuccessRequerimient = () => {
         title="Requerimiento creado"
         subtitle="El requerimiento fue registrado correctamente en el backend."
       />
-      <div className="panel-card">
-        <div className="success-banner">
+      <PanelCard>
+        <SuccessBanner>
           Alta del Requerimiento registrada con éxito.
-        </div>
+        </SuccessBanner>
         <p className="success-highlight">
           Cliente:&nbsp;<span>{customerName}</span>
         </p>
@@ -48,7 +50,7 @@ const SuccessRequerimient = () => {
             Crear otro Requerimiento
           </Link>
         </div>
-      </div>
+      </PanelCard>
     </section>
   )
 }

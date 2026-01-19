@@ -58,7 +58,7 @@ const CreateCustomer = () => {
     } else if (!EMAIL_PATTERN.test(values.mail.trim())) {
       errors.mail = 'Ingresá un mail válido.'
     }
-    iif (isBlank(values.tel)) {
+    if (isBlank(values.tel)) {
       errors.tel = 'El teléfono es obligatorio.'
     }
     if (isBlank(values.mailNotif)) {

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { ErrorBanner } from '../../components/Banner'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
+import PanelCard from '../../components/PanelCard'
 
 import {
   fetchManagerCustomerDetail,
@@ -204,9 +206,9 @@ const ManagerPage = () => {
           />
         </div>
         {customersError && (
-          <div className="error-banner">
+          <ErrorBanner>
             No se pudo cargar el listado. {customersError}
-          </div>
+          </ErrorBanner>
         )}
         <div className="manager-list">
           {loadingCustomers && (
@@ -257,16 +259,14 @@ const ManagerPage = () => {
           </>
         }
       />
-        {detailError && (
-        <div className="error-banner">
-          No se pudo cargar el detalle. {detailError}
-        </div>
+      {detailError && (
+        <ErrorBanner>No se pudo cargar el detalle. {detailError}</ErrorBanner>
       )}
       {detailLoading && <p className="muted">Cargando detalle del cliente...</p>}
       {!detailLoading && sites.length === 0 && (
-        <div className="panel-card">
+        <PanelCard>
           <p className="muted">Este cliente no tiene sites registrados.</p>
-        </div>
+        </PanelCard>
       )}
       <div className="manager-tree">
         {sites.map((site) => {

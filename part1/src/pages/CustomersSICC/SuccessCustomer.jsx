@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
+import { SuccessBanner } from '../../components/Banner'
 import PageHeader from '../../components/PageHeader'
+import PanelCard from '../../components/PanelCard'
 
 const SuccessCustomer = () => {
-    const location = useLocation()
+  const location = useLocation()
   const customer = location.state?.customer
   const customerName = customer?.name || 'cliente'
 
@@ -12,11 +14,11 @@ const SuccessCustomer = () => {
         title="Cliente creado"
         subtitle="El cliente fue registrado correctamente en el backend."
       />
-      <div className="panel-card">
-        <div className="success-banner">Alta del Cliente registrada con éxito.</div>
-          <p className="success-highlight">
-            Cliente:&nbsp;<span>{customerName}</span>
-          </p>
+      <PanelCard>
+        <SuccessBanner>Alta del Cliente registrada con éxito.</SuccessBanner>
+        <p className="success-highlight">
+          Cliente:&nbsp;<span>{customerName}</span>
+        </p>
         <div className="success-actions">
           <Link to="/clientes" className="primary-button">
             Volver
@@ -29,7 +31,7 @@ const SuccessCustomer = () => {
             Crear SITE
           </Link>
         </div>
-      </div>
+      </PanelCard>
     </section>
   )
 }

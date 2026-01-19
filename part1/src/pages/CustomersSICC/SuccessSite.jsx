@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
+import { SuccessBanner } from '../../components/Banner'
 import PageHeader from '../../components/PageHeader'
+import PanelCard from '../../components/PanelCard'
 
 const SuccessSite = () => {
   const location = useLocation()
@@ -14,8 +16,8 @@ const SuccessSite = () => {
         title="Site creado"
         subtitle="El Site fue registrado correctamente."
       />
-      <div className="panel-card">
-        <div className="success-banner">Alta del Site registrada con éxito.</div>
+      <PanelCard>
+        <SuccessBanner>Alta del Site registrada con éxito.</SuccessBanner>
         <p className="success-highlight">
           Cliente:&nbsp;<span>{customerName}</span>
         </p>
@@ -41,7 +43,7 @@ const SuccessSite = () => {
             Crear Requerimiento
           </Link>
         </div>
-      </div>
+      </PanelCard>
     </section>
   )
 }
