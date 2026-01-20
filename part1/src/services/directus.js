@@ -153,7 +153,7 @@ const fetchCustomersPage = async ({ page, searchTerm = '', pageSize }) => {
     'sort[]': 'name',
   })
   if (trimmedSearch) {
-    query.append('filter[name][_contains]', trimmedSearch)
+    query.append('filter[name][_icontains]', trimmedSearch)
   }
   const response = await fetchJSON(
     `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,

@@ -4,6 +4,7 @@ import Button from '../../components/Button'
 import DataTable from '../../components/DataTable'
 import PageHeader from '../../components/PageHeader'
 import Pagination from '../../components/Pagination'
+import SearchBar from '../../components/SearchBar'
 
 const CustomersPage = ({
   customerSearch,
@@ -29,15 +30,11 @@ const CustomersPage = ({
         }
       />
       <div className="customers-toolbar">
-        <div className="input-wrapper">
-          <input
-            type="search"
-            placeholder="Buscar clientes..."
-            className="text-input"
-            value={customerSearch}
-            onChange={(event) => onCustomerSearchChange(event.target.value)}
-          />
-        </div>
+      <SearchBar
+          value={customerSearch}
+          placeholder="Buscar clientes..."
+          onChange={onCustomerSearchChange}
+        />
         <Link to="/clientes/nuevo" className="primary-button">
           Crear Cliente +
         </Link>

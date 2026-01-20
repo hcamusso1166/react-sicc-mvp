@@ -313,8 +313,22 @@ body {
   gap: 16px;
 }
 
-.input-wrapper {
+.search-bar {
   flex: 1;
+  position: relative;
+}
+
+.search-bar__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.search-bar--with-icon .text-input {
+  padding-left: 38px;
 }
 
 .text-input {
@@ -439,19 +453,6 @@ body {
 .manager-search {
   position: relative;
   max-width: 520px;
-}
-
-.manager-search .text-input {
-  padding-left: 38px;
-}
-
-.manager-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  font-size: 14px;
 }
 
 .manager-list {

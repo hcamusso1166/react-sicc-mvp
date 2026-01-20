@@ -4,6 +4,7 @@ import { ErrorBanner } from '../../components/Banner'
 import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
 import PanelCard from '../../components/PanelCard'
+import SearchBar from '../../components/SearchBar'
 
 import {
   fetchManagerCustomerDetail,
@@ -195,16 +196,12 @@ const ManagerPage = () => {
           title="Manager"
           subtitle="Elegí un cliente para revisar el árbol completo de información."
         />
-        <div className="manager-search">
-          <span className="manager-search-icon">🔍</span>
-          <input
-            type="search"
-            placeholder="Buscar clientes..."
-            className="text-input"
-            value={customerSearch}
-            onChange={(event) => setCustomerSearch(event.target.value)}
-          />
-        </div>
+        <SearchBar
+          value={customerSearch}
+          placeholder="Buscar clientes..."
+          onChange={(value) => setCustomerSearch(value)}
+          className="manager-search"
+        />
         {customersError && (
           <ErrorBanner>
             No se pudo cargar el listado. {customersError}
