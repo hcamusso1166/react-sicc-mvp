@@ -10,6 +10,7 @@ const SiteCard = ({
   documentosByProvider,
   personasByProvider,
   vehiculosByProvider,
+  onDocumentsCreated,
   getDisplayName,
   getDocumentoName,
   getPersonName,
@@ -47,6 +48,7 @@ const SiteCard = ({
           documentosByProvider={documentosByProvider}
           personasByProvider={personasByProvider}
           vehiculosByProvider={vehiculosByProvider}
+          onDocumentsCreated={onDocumentsCreated}
           getDisplayName={getDisplayName}
           getDocumentoName={getDocumentoName}
           getPersonName={getPersonName}

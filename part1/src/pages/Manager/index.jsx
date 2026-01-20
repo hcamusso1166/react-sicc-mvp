@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import { ErrorBanner } from '../../components/Banner'
@@ -123,41 +123,29 @@ const ManagerPage = () => {
     }
   }, [])
 
-  useEffect(() => {
-    let isMounted = true
+  const reloadDetail = useCallback(async () => {
     if (!customerId) {
       setDetail(null)
       setDetailError('')
       setDetailLoading(false)
-      return undefined
+      return
     }
-
-    const loadDetail = async () => {
-      setDetailLoading(true)
-      setDetailError('')
-      try {
-        const nextDetail = await fetchManagerCustomerDetail(customerId)
-        if (isMounted) {
-          setDetail(nextDetail)
-        }
-      } catch (error) {
-        if (isMounted) {
-          setDetailError(error.message)
-          setDetail(null)
-        }
-      } finally {
-        if (isMounted) {
-          setDetailLoading(false)
-        }
-      }
-    }
-
-    loadDetail()
-
-    return () => {
-      isMounted = false
+    setDetailLoading(true)
+    setDetailError('')
+    try {
+      const nextDetail = await fetchManagerCustomerDetail(customerId)
+      setDetail(nextDetail)
+    } catch (error) {
+      setDetailError(error.message)
+      setDetail(null)
+    } finally {
+      setDetailLoading(false)
     }
   }, [customerId])
+
+    useEffect(() => {
+    reloadDetail()
+  }, [reloadDetail])
 
   const requirementsBySite = useMemo(() => {
     if (!detail?.requirements) return {}
@@ -275,6 +263,7 @@ const ManagerPage = () => {
         documentosByProvider={documentosByProvider}
         personasByProvider={personasByProvider}
         vehiculosByProvider={vehiculosByProvider}
+        onDocumentsCreated={reloadDetail}
         getDisplayName={getDisplayName}
         getDocumentoName={getDocumentoName}
         getPersonName={getPersonName}

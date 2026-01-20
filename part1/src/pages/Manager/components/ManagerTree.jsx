@@ -8,6 +8,7 @@ const ManagerTree = ({
   documentosByProvider,
   personasByProvider,
   vehiculosByProvider,
+  onDocumentsCreated,
   getDisplayName,
   getDocumentoName,
   getPersonName,
@@ -26,6 +27,7 @@ const ManagerTree = ({
         documentosByProvider={documentosByProvider}
         personasByProvider={personasByProvider}
         vehiculosByProvider={vehiculosByProvider}
+        onDocumentsCreated={onDocumentsCreated}
         getDisplayName={getDisplayName}
         getDocumentoName={getDocumentoName}
         getPersonName={getPersonName}

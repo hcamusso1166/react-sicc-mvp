@@ -14,7 +14,9 @@ const DASHBOARD_TABLES = {
 const TABLES = {
   ...DASHBOARD_TABLES,
   documentos: 'DocumentosRequeridos',
+  parametrosDocumentosRequeridosProveedor: 'parametrosDocumentosRequeridosProveedor',
   personas: 'persona',
+  tiposDocumentos: 'tiposDocumentos',
   vehiculos: 'vehiculo',
 }
 
@@ -300,24 +302,15 @@ const fetchManagerCustomerDetail = async (customerId) => {
   const vehiculos = vehiculosResponse?.data ?? []
 
   const documentoQuery = new URLSearchParams({
-    'sort[]': 'nombre',
+    'sort[]': 'id',
     fields:
-      'id,nombre,descripcion,status,idProveedor,idPersona,idVehiculo,fechaPresentacion,proximaFechaPresentacion',
+      'id,status,idProveedor,idParametro,fechaPresentacion,proximaFechaPresentacion',
   })
   if (providerIds.length) {
     documentoQuery.append('filter[idProveedor][_in]', providerIds.join(','))
   }
-  const personaIds = personas.map((persona) => persona.id).filter(Boolean)
-  if (personaIds.length) {
-    documentoQuery.append('filter[idPersona][_in]', personaIds.join(','))
-  }
-  const vehiculoIds = vehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
-  if (vehiculoIds.length) {
-    documentoQuery.append('filter[idVehiculo][_in]', vehiculoIds.join(','))
-  }
-
-  const documentosResponse =
-    providerIds.length || personaIds.length || vehiculoIds.length
+    const documentosResponse =
+    providerIds.length
       ? await safeFetchJSON(
           withCacheBust(
             `${API_BASE}/items/${TABLES.documentos}?${documentoQuery.toString()}`,
@@ -374,6 +367,129 @@ const createVehiculo = async (payload) => {
   return response?.data
 }
 
+const getRelationId = (value) => {
+  if (Array.isArray(value)) {
+    return value[0]?.id ?? value[0]
+  }
+  if (value && typeof value === 'object') {
+    return value.id
+  }
+  return value
+}
+
+const createProviderRequiredDocuments = async ({
+  providers,
+  documentosByProvider,
+  signal,
+}) => {
+  const eligibleProviders = (providers || []).filter((provider) => {
+    const providerDocs = documentosByProvider?.[provider.id] || []
+    return providerDocs.length === 0
+  })
+  const skippedProviders = (providers || []).length - eligibleProviders.length
+
+  if (eligibleProviders.length === 0) {
+    return {
+      created: 0,
+      providersProcessed: 0,
+      skippedProviders,
+      parametrosCount: 0,
+    }
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+  const parametrosQuery = new URLSearchParams({
+    fields: 'id,idTipoDocumento,idTipoEntidad,fechaDesde,fechaHasta',
+    'filter[idTipoEntidad][_in]': '1,2',
+    'filter[fechaDesde][_lte]': today,
+    'filter[fechaHasta][_gte]': today,
+  })
+  const parametrosResponse = await fetchJSON(
+    `${API_BASE}/items/${
+      TABLES.parametrosDocumentosRequeridosProveedor
+    }?${parametrosQuery.toString()}`,
+    { signal },
+  )
+  const parametros = parametrosResponse?.data ?? []
+
+  if (parametros.length === 0) {
+    return {
+      created: 0,
+      providersProcessed: eligibleProviders.length,
+      skippedProviders,
+      parametrosCount: 0,
+    }
+  }
+
+  const tipoDocumentoIds = [
+    ...new Set(
+      parametros
+        .map((parametro) => getRelationId(parametro.idTipoDocumento))
+        .filter(Boolean),
+    ),
+  ]
+  if (tipoDocumentoIds.length === 0) {
+    return {
+      created: 0,
+      providersProcessed: eligibleProviders.length,
+      skippedProviders,
+      parametrosCount: parametros.length,
+    }
+  }
+
+  const tiposQuery = new URLSearchParams({
+    fields: 'id,nombreDocumento,validezDocumentoDias',
+  })
+  tiposQuery.append('filter[id][_in]', tipoDocumentoIds.join(','))
+  const tiposResponse = await fetchJSON(
+    `${API_BASE}/items/${TABLES.tiposDocumentos}?${tiposQuery.toString()}`,
+    { signal },
+  )
+  const tiposDocumentos = tiposResponse?.data ?? []
+  const tiposById = tiposDocumentos.reduce((acc, tipo) => {
+    if (tipo?.id) acc.set(tipo.id, tipo)
+    return acc
+  }, new Map())
+
+  const documentosToCreate = []
+  eligibleProviders.forEach((provider) => {
+    parametros.forEach((parametro) => {
+      const tipoId = getRelationId(parametro.idTipoDocumento)
+      const tipoDocumento = tiposById.get(tipoId)
+      if (!tipoDocumento) return
+      documentosToCreate.push({
+        status: 'toPresent',
+        validezDias: tipoDocumento.validezDocumentoDias ?? null,
+        idProveedor: provider.id,
+        idParametro: tipoDocumento.id,
+      })
+    })
+  })
+
+  if (!documentosToCreate.length) {
+    return {
+      created: 0,
+      providersProcessed: eligibleProviders.length,
+      skippedProviders,
+      parametrosCount: parametros.length,
+    }
+  }
+
+  const createResponse = await postJSON(
+    `${API_BASE}/items/${TABLES.documentos}`,
+    documentosToCreate,
+    { signal },
+  )
+
+  return {
+    created: documentosToCreate.length,
+    providersProcessed: eligibleProviders.length,
+    skippedProviders,
+    parametrosCount: parametros.length,
+    createdDocuments: createResponse?.data ?? [],
+  }
+}
+
 export {
   API_BASE,
   DIRECTUS_TOKEN,
@@ -389,6 +505,7 @@ export {
   createSite,
   createRequirement,
   createProvider,
+  createProviderRequiredDocuments,
   createPersona,
   createVehiculo,
 }

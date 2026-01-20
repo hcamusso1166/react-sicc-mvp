@@ -48,20 +48,22 @@ const ProviderCard = ({
         </Button>
       </div>
     </div>
-    <div className="manager-provider-documents">
-      <h5>Documentos requeridos</h5>
-      {providerDocuments.length === 0 && (
-        <p className="muted">No hay documentos cargados.</p>
-      )}
-      {providerDocuments.length > 0 && (
-        <ul>
-          {providerDocuments.map((documento) => (
-            <li key={documento.id}>{getDocumentoName(documento)}</li>
-          ))}
-        </ul>
-      )}
-    </div>
     <div className="manager-provider-subcards">
+      <div className="manager-subcard">
+        <div className="manager-subcard-header">
+          <h5>Documentos requeridos</h5>
+        </div>
+        {providerDocuments.length === 0 && (
+          <p className="muted">No hay documentos cargados.</p>
+        )}
+        {providerDocuments.length > 0 && (
+          <ul>
+            {providerDocuments.map((documento) => (
+              <li key={documento.id}>{getDocumentoName(documento)}</li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div className="manager-subcard">
         <div className="manager-subcard-header">
           <h5>Personas</h5>
