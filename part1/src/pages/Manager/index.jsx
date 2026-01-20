@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorBanner } from '../../components/Banner'
-import Button from '../../components/Button'
 import PageHeader from '../../components/PageHeader'
 import PanelCard from '../../components/PanelCard'
 import SearchBar from '../../components/SearchBar'
+import ManagerTree from './components/ManagerTree'
 
 import {
   fetchManagerCustomerDetail,
@@ -265,188 +265,21 @@ const ManagerPage = () => {
           <p className="muted">Este cliente no tiene sites registrados.</p>
         </PanelCard>
       )}
-      <div className="manager-tree">
-        {sites.map((site) => {
-          const siteRequirements = requirementsBySite[site.id] || []
-          return (
-            <div key={site.id} className="manager-tree-card">
-              <div className="manager-tree-header">
-                <div>
-                  <h3>Site: {getDisplayName(site)}</h3>
-                  <p className="muted">Estado: {site.status || 'Sin estado'}</p>
-                </div>
-                <Link
-                  to="/clientes/requerimiento/nuevo"
-                  className="primary-button small"
-                  state={{ customer, site }}
-                >
-                  Crear Requerimiento +
-                </Link>
-              </div>
-              <div className="manager-tree-body">
-                {siteRequirements.length === 0 && (
-                  <p className="muted">
-                    No hay requerimientos registrados para este site.
-                  </p>
-                )}
-                {siteRequirements.map((requirement) => {
-                  const requirementProviders =
-                    providersByRequirement[requirement.id] || []
-                  return (
-                    <div key={requirement.id} className="manager-requirement-card">
-                      <div className="manager-tree-header">
-                        <div>
-                          <h4>
-                            Requerimiento: {getDisplayName(requirement)}
-                          </h4>
-                          <p className="muted">
-                            Estado: {requirement.status || 'Sin estado'}
-                          </p>
-                        </div>
-                        <Link
-                          to="/clientes/proveedor/nuevo"
-                          className="primary-button small"
-                          state={{ customer, site, requirement }}
-                        >
-                          Crear Proveedor +
-                        </Link>
-                      </div>
-                      <div className="manager-provider-section">
-                        <div className="manager-provider-header">
-                          <span>Proveedores</span>
-                          <Button type="button" variant="ghost" size="small">
-                            Crear Documentos Requerido
-                          </Button>
-                        </div>
-                        {requirementProviders.length === 0 && (
-                          <p className="muted">
-                            No hay proveedores asociados a este requerimiento.
-                          </p>
-                        )}
-                        {requirementProviders.map((provider) => {
-                          const providerDocuments =
-                            documentosByProvider[provider.id] || []
-                          const providerPersonas =
-                            personasByProvider[provider.id] || []
-                          const providerVehiculos =
-                            vehiculosByProvider[provider.id] || []
-                          return (
-                            <div
-                              key={provider.id}
-                              className="manager-provider-card"
-                            >
-<div className="manager-provider-top">
-                                <div className="manager-provider-summary">
-                                  <strong>{getDisplayName(provider)}</strong>
-                                  <span className="muted">
-                                    CUIT: {provider.CUIT || '-'}
-                                  </span>
-                                  <span className="muted">
-                                    Estado: {provider.status || 'Sin estado'}
-                                  </span>
-                                </div>
-                                <div className="manager-provider-actions">
-                                  <Link
-                                    to="/clientes/proveedor/persona/nuevo"
-                                    className="primary-button small"
-                                    state={{ customer, site, requirement, provider }}
-                                  >
-                                    Crear Persona +
-                                  </Link>
-                                  <Link
-                                    to="/clientes/proveedor/vehiculo/nuevo"
-                                    className="primary-button small"
-                                    state={{ customer, site, requirement, provider }}
-                                  >
-                                    Crear Vehículo +
-                                  </Link>
-                                </div>
-                              </div>
-                              <div className="manager-provider-documents">
-                                <h5>Documentos requeridos</h5>
-                                {providerDocuments.length === 0 && (
-                                  <p className="muted">
-                                    No hay documentos cargados.
-                                  </p>
-                                )}
-                                {providerDocuments.length > 0 && (
-                                  <ul>
-                                    {providerDocuments.map((documento) => (
-                                      <li key={documento.id}>
-                                        {getDocumentoName(documento)}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                              <div className="manager-provider-subcards">
-                                <div className="manager-subcard">
-                                  <div className="manager-subcard-header">
-                                    <h5>Personas</h5>
-                                  </div>
-                                  {providerPersonas.length === 0 && (
-                                    <p className="muted">
-                                      No hay personas registradas.
-                                    </p>
-                                  )}
-                                  {providerPersonas.length > 0 && (
-                                    <ul>
-                                        {providerPersonas.map((persona) => (
-                                        <li key={persona.id}>
-                                          <strong>{getPersonName(persona)}</strong>
-                                          <span className="muted">
-                                            DNI: {getPersonaDocumento(persona)}
-                                          </span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  )}
-                                </div>
-                                <div className="manager-subcard">
-                                  <div className="manager-subcard-header">
-                                    <h5>Vehículos</h5>
-                                  </div>
-                                  {providerVehiculos.length === 0 && (
-                                    <p className="muted">
-                                      No hay vehículos registrados.
-                                    </p>
-                                  )}
-                                   {providerVehiculos.length > 0 && (
-                                    <ul>
-                                      {providerVehiculos.map((vehiculo) => (
-                                        <li key={vehiculo.id}>
-                                          <strong>
-                                            {getVehicleName(vehiculo)}
-                                          </strong>
-                                          <span className="muted">
-                                            Dominio:{' '}
-                                            {getVehiculoField(vehiculo.dominio)}
-                                          </span>
-                                          <span className="muted">
-                                            Marca: {getVehiculoField(vehiculo.marca)}
-                                          </span>
-                                          <span className="muted">
-                                            Modelo:{' '}
-                                            {getVehiculoField(vehiculo.modelo)}
-                                          </span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <ManagerTree
+        customer={customer}
+        sites={sites}
+        requirementsBySite={requirementsBySite}
+        providersByRequirement={providersByRequirement}
+        documentosByProvider={documentosByProvider}
+        personasByProvider={personasByProvider}
+        vehiculosByProvider={vehiculosByProvider}
+        getDisplayName={getDisplayName}
+        getDocumentoName={getDocumentoName}
+        getPersonName={getPersonName}
+        getPersonaDocumento={getPersonaDocumento}
+        getVehicleName={getVehicleName}
+        getVehiculoField={getVehiculoField}
+      />
     </section>
   )
 }

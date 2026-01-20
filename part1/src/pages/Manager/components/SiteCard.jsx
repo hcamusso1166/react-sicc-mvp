@@ -1,0 +1,59 @@
+import { Link } from 'react-router-dom'
+import RequirementCard from './RequirementCard'
+
+const SiteCard = ({
+  site,
+  customer,
+  requirements,
+  providersByRequirement,
+  documentosByProvider,
+  personasByProvider,
+  vehiculosByProvider,
+  getDisplayName,
+  getDocumentoName,
+  getPersonName,
+  getPersonaDocumento,
+  getVehicleName,
+  getVehiculoField,
+}) => (
+  <div className="manager-tree-card">
+    <div className="manager-tree-header">
+      <div>
+        <h3>Site: {getDisplayName(site)}</h3>
+        <p className="muted">Estado: {site.status || 'Sin estado'}</p>
+      </div>
+      <Link
+        to="/clientes/requerimiento/nuevo"
+        className="primary-button small"
+        state={{ customer, site }}
+      >
+        Crear Requerimiento +
+      </Link>
+    </div>
+    <div className="manager-tree-body">
+      {requirements.length === 0 && (
+        <p className="muted">No hay requerimientos registrados para este site.</p>
+      )}
+      {requirements.map((requirement) => (
+        <RequirementCard
+          key={requirement.id}
+          requirement={requirement}
+          customer={customer}
+          site={site}
+          providers={providersByRequirement[requirement.id] || []}
+          documentosByProvider={documentosByProvider}
+          personasByProvider={personasByProvider}
+          vehiculosByProvider={vehiculosByProvider}
+          getDisplayName={getDisplayName}
+          getDocumentoName={getDocumentoName}
+          getPersonName={getPersonName}
+          getPersonaDocumento={getPersonaDocumento}
+          getVehicleName={getVehicleName}
+          getVehiculoField={getVehiculoField}
+        />
+      ))}
+    </div>
+  </div>
+)
+
+export default SiteCard
