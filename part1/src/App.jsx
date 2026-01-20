@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import './App.css'
 import DashboardLayout from './components/Layout/DashboardLayout'
@@ -10,8 +10,14 @@ const MENU_ITEMS = [
   { label: 'Home', to: '/' },
   { label: 'Clientes', to: '/clientes' },
   { label: 'Integral View', to: '/integral-view' },
-    { label: 'Reportes - Documentos a vencer', to: '/reportes/documentos-a-vencer' },
-    { label: 'Reportes - Documentos verificados', to: '/reportes/documentos-verificados', },
+  {
+    label: 'Reportes - Documentos a vencer',
+    to: '/reportes/documentos-a-vencer',
+  },
+  {
+    label: 'Reportes - Documentos verificados',
+    to: '/reportes/documentos-verificados',
+  },
   { label: 'Manager', to: '/manager' },
 ]
 
@@ -46,16 +52,13 @@ const App = () => {
     () => ['#22c55e', '#f97316', '#3b82f6', '#ef4444', '#a855f7'],
     [],
   )
-  const filteredCustomers = useMemo(() => customers, [customers])
   const totalCustomerPages = Math.max(
     1,
     Math.ceil(customersTotal / CUSTOMERS_PAGE_SIZE),
   )
 
-  const loadDashboardData = async () => {
-    setLoading(true)
-    setError('')
-        setCounts({
+  const resetDashboardState = useCallback(() => {
+    setCounts({
       clientes: 0,
       sites: 0,
       requerimientos: 0,
@@ -63,23 +66,31 @@ const App = () => {
     })
     setStatusData([])
     setDocumentos([])
+  }, [])
+
+  const loadDashboardData = useCallback(async (signal) => {
+    setLoading(true)
+    setError('')
+    resetDashboardState()
     try {
       const {
         counts: nextCounts,
         statusData: nextStatusData,
         documentos: nextDocumentos,
-      } = await fetchDashboardData({ colors, getStatusLabel })
+      } = await fetchDashboardData({ colors, getStatusLabel, signal })
       setCounts(nextCounts)
       setStatusData(nextStatusData)
       setDocumentos(nextDocumentos)
     } catch (err) {
-      setError(err.message)
+      if (err.name !== 'AbortError') {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
-  }
+ }, [colors, resetDashboardState])
 
-  const loadCustomers = async (page, searchTerm = '') => {
+  const loadCustomers = useCallback(async (page, searchTerm = '', signal) => {
     setCustomersLoading(true)
     setCustomersError('')
     setCustomers([])
@@ -89,30 +100,45 @@ const App = () => {
         page,
         searchTerm,
         pageSize: CUSTOMERS_PAGE_SIZE,
+        signal,
       })
       setCustomers(nextCustomers)
       setCustomersTotal(total)
     } catch (err) {
-      setCustomersError(err.message)
+      if (err.name !== 'AbortError') {
+        setCustomersError(err.message)
+      }
     } finally {
       setCustomersLoading(false)
     }
-  }
+    }, [])
 
   useEffect(() => {
     if (isLoggedIn && location.pathname === '/') {
-      loadDashboardData()
+      const controller = new AbortController()
+      loadDashboardData(controller.signal)
+      return () => controller.abort()
     }
-  }, [isLoggedIn, location.pathname])
+      return undefined
+  }, [isLoggedIn, location.pathname, loadDashboardData])
 
   useEffect(() => {
     if (isLoggedIn && location.pathname === '/clientes') {
-      loadCustomers(customersPage, customerSearch)
+      const controller = new AbortController()
+      loadCustomers(customersPage, customerSearch, controller.signal)
+      return () => controller.abort()
     }
-  }, [isLoggedIn, location.pathname, customersPage, customerSearch])
+      return undefined
+  }, [
+    isLoggedIn,
+    location.pathname,
+    customersPage,
+    customerSearch,
+    loadCustomers,
+  ])
 
   if (!isLoggedIn) {
-        return <LoginPage onLogin={() => setIsLoggedIn(true)} />
+    return <LoginPage onLogin={() => setIsLoggedIn(true)} />
   }
 
   return (
@@ -122,14 +148,7 @@ const App = () => {
         setIsLoggedIn(false)
         setCustomersPage(1)
         setCustomerSearch('')
-        setCounts({
-          clientes: 0,
-          sites: 0,
-          requerimientos: 0,
-          proveedores: 0,
-        })
-        setStatusData([])
-        setDocumentos([])
+        resetDashboardState()
         setCustomers([])
         setCustomersTotal(0)
         setCustomersError('')
@@ -151,11 +170,13 @@ const App = () => {
         }}
         customersError={customersError}
         customersLoading={customersLoading}
-        filteredCustomers={filteredCustomers}
+        filteredCustomers={customers}
         customersPage={customersPage}
         totalCustomerPages={totalCustomerPages}
         onCustomersPageChange={setCustomersPage}
-        onCustomersRefresh={() => loadCustomers(customersPage, customerSearch)}
+        onCustomersRefresh={() =>
+          loadCustomers(customersPage, customerSearch)
+        }
         getStatusLabel={getStatusLabel}
       />
     </DashboardLayout>

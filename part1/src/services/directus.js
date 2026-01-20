@@ -18,14 +18,16 @@ const TABLES = {
   vehiculos: 'vehiculo',
 }
 
-const fetchJSON = async (url) => {
+const fetchJSON = async (url, options = {}) => {
   const response = await fetch(url, {
     cache: 'no-store',
+    signal: options.signal,
     headers: DIRECTUS_TOKEN
       ? {
           Authorization: `Bearer ${DIRECTUS_TOKEN}`,
+          ...options.headers,
         }
-      : undefined,
+      : options.headers,
   })
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`)
@@ -39,16 +41,17 @@ const withCacheBust = (url, cacheBust) => {
   return `${url}${separator}cacheBust=${encodeURIComponent(cacheBust)}`
 }
 
-const safeFetchJSON = async (url) => {
+const safeFetchJSON = async (url, options) => {
   try {
-    return await fetchJSON(url)
+    return await fetchJSON(url, options)
   } catch (error) {
     return { data: [], error }
   }
 }
-const postJSON = async (url, payload) => {
+const postJSON = async (url, payload, options = {}) => {
   const response = await fetch(url, {
     method: 'POST',
+    signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
       ...(DIRECTUS_TOKEN
@@ -56,6 +59,7 @@ const postJSON = async (url, payload) => {
             Authorization: `Bearer ${DIRECTUS_TOKEN}`,
           }
         : {}),
+      ...options.headers,
     },
     body: JSON.stringify(payload),
   })
@@ -65,9 +69,10 @@ const postJSON = async (url, payload) => {
   return response.json()
 }
 
-const fetchTableCount = (table) => {
+const fetchTableCount = (table, options) => {
   return fetchJSON(
     `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
+    options,
   )
 }
 
@@ -80,7 +85,7 @@ const getStatusLabelFallback = (value) => {
   return value.toString().replace(/_/g, ' ')
 }
 
-const fetchDashboardData = async ({ colors, getStatusLabel }) => {
+const fetchDashboardData = async ({ colors, getStatusLabel, signal }) => {
   const labelFormatter = getStatusLabel || getStatusLabelFallback
   const [
     clientesResponse,
@@ -90,15 +95,17 @@ const fetchDashboardData = async ({ colors, getStatusLabel }) => {
     documentosStatusResponse,
     documentosListResponse,
   ] = await Promise.all([
-    fetchTableCount(DASHBOARD_TABLES.clientes),
-    fetchTableCount(DASHBOARD_TABLES.sites),
-    fetchTableCount(DASHBOARD_TABLES.requerimientos),
-    fetchTableCount(DASHBOARD_TABLES.proveedores),
+    fetchTableCount(DASHBOARD_TABLES.clientes, { signal }),
+    fetchTableCount(DASHBOARD_TABLES.sites, { signal }),
+    fetchTableCount(DASHBOARD_TABLES.requerimientos, { signal }),
+    fetchTableCount(DASHBOARD_TABLES.proveedores, { signal }),
     fetchJSON(
       `${API_BASE}/items/${TABLES.documentos}?groupBy[]=status&aggregate[count]=*`,
+      { signal },
     ),
     fetchJSON(
       `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
+      { signal },
     ),
   ])
 
@@ -144,7 +151,12 @@ const fetchDashboardData = async ({ colors, getStatusLabel }) => {
   }
 }
 
-const fetchCustomersPage = async ({ page, searchTerm = '', pageSize }) => {
+const fetchCustomersPage = async ({
+  page,
+  searchTerm = '',
+  pageSize,
+  signal,
+}) => {
   const trimmedSearch = searchTerm.trim()
   const query = new URLSearchParams({
     limit: String(pageSize),
@@ -157,6 +169,7 @@ const fetchCustomersPage = async ({ page, searchTerm = '', pageSize }) => {
   }
   const response = await fetchJSON(
     `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,
+    { signal },
   )
 
   return {
