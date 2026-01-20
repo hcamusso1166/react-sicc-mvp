@@ -7,6 +7,7 @@ const VARIANT_CLASSES = {
 }
 
 const Button = ({
+  as: Component = 'button',
   type = 'button',
   variant = 'primary',
   size,
@@ -19,15 +20,17 @@ const Button = ({
   const sizeClass = size ? ` ${size}` : ''
   const activeClass = isActive ? ' active' : ''
   const classes = `${variantClass}${sizeClass}${activeClass}`.trim()
+  const componentProps = {
+    className: [classes, className].filter(Boolean).join(' '),
+    ...props,
+  }
+
+  if (Component === 'button') {
+    componentProps.type = type
+  }
 
   return (
-    <button
-      type={type}
-      className={[classes, className].filter(Boolean).join(' ')}
-      {...props}
-    >
-      {children}
-    </button>
+    <Component {...componentProps}>{children}</Component>
   )
 }
 

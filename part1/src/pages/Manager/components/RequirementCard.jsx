@@ -23,13 +23,15 @@ const RequirementCard = ({
         <h4>Requerimiento: {getDisplayName(requirement)}</h4>
         <p className="muted">Estado: {requirement.status || 'Sin estado'}</p>
       </div>
-      <Link
+      <Button
+        as={Link}
         to="/clientes/proveedor/nuevo"
-        className="primary-button small"
+        variant="primary"
+        size="small"
         state={{ customer, site, requirement }}
       >
         Crear Proveedor +
-      </Link>
+      </Button>
     </div>
     <div className="manager-provider-section">
       <div className="manager-provider-header">

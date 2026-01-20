@@ -209,12 +209,13 @@ const CreatePersona = () => {
             </label>
           </div>
           <div className="form-actions">
-            <Link
-              className="secondary-button"
+            <Button
+              as={Link}
               to={customerId ? `/manager?customerId=${customerId}` : '/manager'}
+              variant="secondary"
             >
               Cancelar
-            </Link>
+            </Button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar persona'}
             </Button>

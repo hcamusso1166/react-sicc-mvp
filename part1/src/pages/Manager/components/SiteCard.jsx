@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Button from '../../../components/Button'
 import RequirementCard from './RequirementCard'
 
 const SiteCard = ({
@@ -22,13 +23,15 @@ const SiteCard = ({
         <h3>Site: {getDisplayName(site)}</h3>
         <p className="muted">Estado: {site.status || 'Sin estado'}</p>
       </div>
-      <Link
+      <Button
+        as={Link}
         to="/clientes/requerimiento/nuevo"
-        className="primary-button small"
+        variant="primary"
+        size="small"
         state={{ customer, site }}
       >
         Crear Requerimiento +
-      </Link>
+      </Button>
     </div>
     <div className="manager-tree-body">
       {requirements.length === 0 && (

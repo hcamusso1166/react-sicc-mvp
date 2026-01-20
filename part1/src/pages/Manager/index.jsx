@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import Button from '../../components/Button'
 import { ErrorBanner } from '../../components/Banner'
 import PageHeader from '../../components/PageHeader'
 import PanelCard from '../../components/PanelCard'
@@ -243,16 +244,17 @@ const ManagerPage = () => {
         actionsClassName="manager-header-actions"
         actions={
           <>
-            <Link to="/manager" className="secondary-button">
+            <Button as={Link} to="/manager" variant="secondary">
               Volver
-            </Link>
-            <Link
+            </Button>
+            <Button
+              as={Link}
               to="/clientes/site/nuevo"
-              className="primary-button"
+              variant="primary"
               state={{ customer }}
             >
               Crear Site +
-            </Link>
+            </Button>
           </>
         }
       />

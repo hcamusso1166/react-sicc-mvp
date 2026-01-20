@@ -134,10 +134,10 @@ const CreateSite = () => {
               />
             </FormField>
           </FormGrid>
-          <FormActions>             
-            <Link className="secondary-button" to="/clientes">
+          <FormActions>
+            <Button as={Link} to="/clientes" variant="secondary">
               Cancelar
-            </Link>
+            </Button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar Site'}
             </Button>

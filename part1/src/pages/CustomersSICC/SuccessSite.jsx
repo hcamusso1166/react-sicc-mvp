@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import Button from '../../components/Button'
 import { SuccessBanner } from '../../components/Banner'
 import PageHeader from '../../components/PageHeader'
 import PanelCard from '../../components/PanelCard'
@@ -25,23 +26,25 @@ const SuccessSite = () => {
           Site:&nbsp;<span>{siteName}</span>
         </p>
         <div className="success-actions">
-          <Link to="/clientes" className="primary-button">
+          <Button as={Link} to="/clientes" variant="primary">
             Volver al listado
-          </Link>
-          <Link
+          </Button>
+          <Button
+            as={Link}
             to="/clientes/site/nuevo"
-            className="primary-button"
+            variant="primary"
             state={{ customer }}
           >
             Crear otro Site
-          </Link>
-          <Link
+          </Button>
+          <Button
+            as={Link}
             to="/clientes/site/requerimiento/nuevo"
-            className="primary-button"
+            variant="primary"
             state={{ customer, site }}
           >
             Crear Requerimiento
-          </Link>
+          </Button>
         </div>
       </PanelCard>
     </section>

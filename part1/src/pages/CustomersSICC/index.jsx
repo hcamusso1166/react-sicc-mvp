@@ -30,14 +30,14 @@ const CustomersPage = ({
         }
       />
       <div className="customers-toolbar">
-      <SearchBar
+        <SearchBar
           value={customerSearch}
           placeholder="Buscar clientes..."
           onChange={onCustomerSearchChange}
         />
-        <Link to="/clientes/nuevo" className="primary-button">
+        <Button as={Link} to="/clientes/nuevo" variant="primary">
           Crear Cliente +
-        </Link>
+        </Button>
       </div>
       {customersError && (
         <ErrorBanner>

@@ -152,10 +152,10 @@ const STATUS_OPTIONS = [
               />
             </FormField>
           </FormGrid>
-          <FormActions>         
-            <Link className="secondary-button" to="/manager">
+          <FormActions>
+            <Button as={Link} to="/manager" variant="secondary">
               Cancelar
-            </Link>
+            </Button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar proveedor'}
             </Button>

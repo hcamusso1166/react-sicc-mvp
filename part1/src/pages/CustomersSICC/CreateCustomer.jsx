@@ -237,9 +237,9 @@ const CreateCustomer = () => {
           )}
 
           <FormActions>
-            <Link to="/clientes" className="ghost-button">
+            <Button as={Link} to="/clientes" variant="ghost">
               Cancelar
-            </Link>
+            </Button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Creando...' : 'Crear Cliente'}
             </Button>

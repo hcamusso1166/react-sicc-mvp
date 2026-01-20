@@ -187,9 +187,9 @@ const CreateRequirement = () => {
             </label>
           </div>
           <div className="form-actions">
-            <Link className="secondary-button" to="/clientes">
+            <Button as={Link} to="/clientes" variant="secondary">
               Cancelar
-            </Link>
+            </Button>
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Guardando...' : 'Guardar requerimiento'}
             </Button>

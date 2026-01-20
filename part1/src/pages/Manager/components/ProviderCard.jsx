@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Button from '../../../components/Button'
 import PersonList from './PersonList'
 import VehicleList from './VehicleList'
 
@@ -27,20 +28,24 @@ const ProviderCard = ({
         </span>
       </div>
       <div className="manager-provider-actions">
-        <Link
+        <Button
+          as={Link}
           to="/clientes/proveedor/persona/nuevo"
-          className="primary-button small"
+          variant="primary"
+          size="small"
           state={{ customer, site, requirement, provider }}
         >
           Crear Persona +
-        </Link>
-        <Link
+        </Button>
+        <Button
+          as={Link}
           to="/clientes/proveedor/vehiculo/nuevo"
-          className="primary-button small"
+          variant="primary"
+          size="small"
           state={{ customer, site, requirement, provider }}
         >
           Crear Vehículo +
-        </Link>
+        </Button>
       </div>
     </div>
     <div className="manager-provider-documents">
