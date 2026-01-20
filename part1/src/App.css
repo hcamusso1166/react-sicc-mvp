@@ -577,6 +577,14 @@ body {
   color: #64748b;
 }
 
+.manager-subcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .manager-provider-documents ul,
 .manager-subcard ul {
   padding-left: 18px;
@@ -603,6 +611,68 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.manager-documents-table-wrapper {
+  overflow-x: auto;
+}
+
+.manager-documents-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.manager-documents-table thead th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 10px 12px;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.manager-documents-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.manager-documents-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.manager-documents-status {
+  background: #64748b;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manager-documents-status--pending {
+  background: #64748b;
+}
+
+.manager-documents-status--ok {
+  background: #16a34a;
+}
+
+.manager-documents-status--info {
+  background: #0ea5e9;
+}
+
+.manager-documents-status--danger {
+  background: #ef4444;
+}
+
+.manager-documents-status--unknown {
+  background: #94a3b8;
 }
 
 @media (max-width: 900px) {

@@ -72,7 +72,13 @@ const getVehiculoField = (value, fallback = '-') =>
 
 const getDocumentoName = (documento) => {
   if (!documento) return 'Documento'
-  return documento.nombre || documento.descripcion || `Documento ${documento.id}`
+    return (
+    documento.nombreDocumento ||
+    documento?.tipoDocumento?.nombreDocumento ||
+    documento.nombre ||
+    documento.descripcion ||
+    `Documento ${documento.id}`
+  )
 }
 
 const ManagerPage = () => {

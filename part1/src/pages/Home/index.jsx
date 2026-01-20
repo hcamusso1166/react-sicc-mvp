@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ErrorBanner } from '../../components/Banner'
 import Button from '../../components/Button'
 import DocumentList from '../../components/DocumentList'
@@ -15,6 +16,12 @@ const HomePage = ({
   error,
   onStatusLabel,
 }) => {
+  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
+  const hasDocuments = documentos.length > 0
+  const documentsCountLabel = hasDocuments
+    ? `${documentos.length} documento${documentos.length === 1 ? '' : 's'}`
+    : 'No hay documentos'
+
   return (
     <>
       <PageHeader
@@ -53,15 +60,45 @@ const HomePage = ({
           <div className="panel-header">
             <h3>Documentos a presentar</h3>
           </div>
-          <DocumentList documentos={documentos} onStatusLabel={onStatusLabel} />
-          <Button
-            type="button"
-            variant="text"
-            onClick={onRefresh}
-            disabled={loading}
-          >
-            {loading ? 'Actualizando...' : 'Actualizar la información'}
-          </Button>
+          {!hasDocuments && (
+            <p className="muted">No hay documentos para presentar.</p>
+          )}
+          {hasDocuments && (
+            <>
+              <div>
+                <p className="muted">
+                  {documentsCountLabel} pendiente
+                  {documentos.length === 1 ? '' : 's'}.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsDocumentsExpanded((prev) => !prev)}
+                  aria-expanded={isDocumentsExpanded}
+                >
+                  {isDocumentsExpanded
+                    ? 'Ocultar documentos'
+                    : 'Ver documentos'}
+                </Button>
+              </div>
+              {isDocumentsExpanded && (
+                <>
+                  <DocumentList
+                    documentos={documentos}
+                    onStatusLabel={onStatusLabel}
+                  />
+                  <Button
+                    type="button"
+                    variant="text"
+                    onClick={onRefresh}
+                    disabled={loading}
+                  >
+                    {loading ? 'Actualizando...' : 'Actualizar la información'}
+                  </Button>
+                </>
+              )}
+            </>
+          )}
         </PanelCard>
       </section>
     </>

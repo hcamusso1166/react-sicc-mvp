@@ -50,6 +50,16 @@ const safeFetchJSON = async (url, options) => {
     return { data: [], error }
   }
 }
+
+const getRelationId = (value) => {
+  if (Array.isArray(value)) {
+    return value[0]?.id ?? value[0]
+  }
+  if (value && typeof value === 'object') {
+    return value.id
+  }
+  return value
+}
 const postJSON = async (url, payload, options = {}) => {
   const response = await fetch(url, {
     method: 'POST',
@@ -319,6 +329,35 @@ const fetchManagerCustomerDetail = async (customerId) => {
         )
       : { data: [] }
 
+     const documentos = documentosResponse?.data ?? []
+  const documentoTipoIds = [
+    ...new Set(
+      documentos
+        .map((documento) => getRelationId(documento.idParametro))
+        .filter(Boolean),
+    ),
+  ]
+  const tiposDocumentosResponse = documentoTipoIds.length
+    ? await safeFetchJSON(
+        withCacheBust(
+          `${API_BASE}/items/${TABLES.tiposDocumentos}?${new URLSearchParams({
+            ...Object.fromEntries(buildInFilter('id', documentoTipoIds)),
+            fields: 'id,nombreDocumento,validezDocumentoDias',
+          }).toString()}`,
+          cacheBust,
+        ),
+      )
+    : { data: [] }
+  const tiposDocumentos = tiposDocumentosResponse?.data ?? []
+  const tiposById = tiposDocumentos.reduce((acc, tipo) => {
+    if (tipo?.id) acc.set(tipo.id, tipo)
+    return acc
+  }, new Map())
+  const documentosEnriched = documentos.map((documento) => {
+    const tipo = tiposById.get(getRelationId(documento.idParametro))
+    return tipo ? { ...documento, tipoDocumento: tipo } : documento
+  })
+ 
   return {
     customer: customerResponse?.data ?? null,
     sites,
@@ -326,7 +365,7 @@ const fetchManagerCustomerDetail = async (customerId) => {
     providers,
     personas,
     vehiculos,
-    documentos: documentosResponse?.data ?? [],
+    documentos: documentosEnriched,
   }
 }
 const createCustomer = async (payload) => {
@@ -365,16 +404,6 @@ const createVehiculo = async (payload) => {
     payload,
   )
   return response?.data
-}
-
-const getRelationId = (value) => {
-  if (Array.isArray(value)) {
-    return value[0]?.id ?? value[0]
-  }
-  if (value && typeof value === 'object') {
-    return value.id
-  }
-  return value
 }
 
 const createProviderRequiredDocuments = async ({
