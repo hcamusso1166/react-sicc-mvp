@@ -571,7 +571,7 @@ body {
 
 .manager-provider-documents h5,
 .manager-subcard-header h5 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 13px;
   text-transform: uppercase;
   color: #64748b;
@@ -580,9 +580,10 @@ body {
 .manager-subcard-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .manager-provider-documents ul,
