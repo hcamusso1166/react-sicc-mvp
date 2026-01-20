@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
 import PersonList from './PersonList'
@@ -48,6 +48,19 @@ const ProviderCard = ({
   getVehicleName,
   getVehiculoField,
 }) => {
+  const documentsCount = providerDocuments.length
+  const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true)
+  const previousDocumentsCount = useRef(documentsCount)
+
+  useEffect(() => {
+    if (documentsCount === 0) {
+      setIsDocumentsCollapsed(true)
+    } else if (previousDocumentsCount.current === 0) {
+      setIsDocumentsCollapsed(true)
+    }
+    previousDocumentsCount.current = documentsCount
+  }, [documentsCount])
+
   const sortedDocuments = useMemo(() => {
     const documents = [...providerDocuments]
     const compareValues = (a, b) => {
@@ -86,6 +99,12 @@ const ProviderCard = ({
     })
   }, [providerDocuments, getDocumentoName])
 
+  const toggleDocuments = () => {
+    setIsDocumentsCollapsed((prevState) => !prevState)
+  }
+
+  const documentsTableId = `provider-documents-${provider?.id ?? 'unknown'}`
+
   return (
     <div className="manager-provider-card">
       <div className="manager-provider-top">
@@ -96,8 +115,8 @@ const ProviderCard = ({
             Estado: {provider.status || 'Sin estado'}
           </span>
         </div>
-        <div className="manager-provider-actions">
-         <Button
+      <div className="manager-provider-actions">
+          <Button
             as={Link}
             to="/clientes/proveedor/persona/nuevo"
             variant="primary"
@@ -117,16 +136,37 @@ const ProviderCard = ({
           </Button>
         </div>
       </div>
-      <div className="manager-provider-subcards">
+ <div className="manager-provider-subcards">
         <div className="manager-subcard">
           <div className="manager-subcard-header">
-            <h5>Documentos requeridos</h5>
+            <h5>Documentos a Presentar</h5>
+            {documentsCount > 0 && (
+              <Button
+                variant="ghost"
+                size="small"
+                onClick={toggleDocuments}
+                aria-expanded={!isDocumentsCollapsed}
+                aria-controls={documentsTableId}
+              >
+                {isDocumentsCollapsed ? 'Ver documentos' : 'Plegar documentos'}
+              </Button>
+            )}
           </div>
-          {providerDocuments.length === 0 && (
-            <p className="muted">No hay documentos cargados.</p>
+          {documentsCount === 0 && (
+            <p className="muted">No hay documento para presentar.</p>
           )}
-          {providerDocuments.length > 0 && (
-            <div className="manager-documents-table-wrapper">
+          {documentsCount > 0 && isDocumentsCollapsed && (
+            <p className="muted">
+              {documentsCount === 1
+                ? 'Hay 1 documento para presentar.'
+                : `Hay ${documentsCount} documentos para presentar.`}
+            </p>
+          )}
+          {documentsCount > 0 && !isDocumentsCollapsed && (
+            <div
+              className="manager-documents-table-wrapper"
+              id={documentsTableId}
+            >
               <table className="manager-documents-table">
                 <thead>
                   <tr>
