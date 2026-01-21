@@ -81,10 +81,14 @@ const postJSON = async (url, payload, options = {}) => {
   return response.json()
 }
 
-const fetchTableCount = (table, options) => {
+const fetchTableCount = (table, options = {}) => {
+  const { cacheBust, ...fetchOptions } = options
   return fetchJSON(
-    `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
-    options,
+    withCacheBust(
+      `${API_BASE}/items/${table}?limit=1&meta=filter_count&fields=id`,
+      cacheBust,
+    ),
+    fetchOptions,
   )
 }
 
@@ -99,6 +103,7 @@ const getStatusLabelFallback = (value) => {
 
 const fetchDashboardData = async ({ colors, getStatusLabel, signal }) => {
   const labelFormatter = getStatusLabel || getStatusLabelFallback
+  const cacheBust = Date.now().toString()
   const [
     clientesResponse,
     sitesResponse,
@@ -107,16 +112,22 @@ const fetchDashboardData = async ({ colors, getStatusLabel, signal }) => {
     documentosStatusResponse,
     documentosListResponse,
   ] = await Promise.all([
-    fetchTableCount(DASHBOARD_TABLES.clientes, { signal }),
-    fetchTableCount(DASHBOARD_TABLES.sites, { signal }),
-    fetchTableCount(DASHBOARD_TABLES.requerimientos, { signal }),
-    fetchTableCount(DASHBOARD_TABLES.proveedores, { signal }),
+    fetchTableCount(DASHBOARD_TABLES.clientes, { signal, cacheBust }),
+    fetchTableCount(DASHBOARD_TABLES.sites, { signal, cacheBust }),
+    fetchTableCount(DASHBOARD_TABLES.requerimientos, { signal, cacheBust }),
+    fetchTableCount(DASHBOARD_TABLES.proveedores, { signal, cacheBust }),
     fetchJSON(
-      `${API_BASE}/items/${TABLES.documentos}?groupBy[]=status&aggregate[count]=*`,
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.documentos}?groupBy[]=status&aggregate[count]=*`,
+        cacheBust,
+      ),
       { signal },
     ),
     fetchJSON(
-      `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.documentos}?limit=5&sort[]=proximaFechaPresentacion&fields=id,status,idParametro,idProveedor,proximaFechaPresentacion,fechaPresentacion`,
+        cacheBust,
+      ),
       { signal },
     ),
   ])
@@ -169,6 +180,7 @@ const fetchCustomersPage = async ({
   pageSize,
   signal,
 }) => {
+  const cacheBust = Date.now().toString()
   const trimmedSearch = searchTerm.trim()
   const query = new URLSearchParams({
     limit: String(pageSize),
@@ -180,7 +192,10 @@ const fetchCustomersPage = async ({
     query.append('filter[name][_icontains]', trimmedSearch)
   }
   const response = await fetchJSON(
-    `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,
+    withCacheBust(
+      `${API_BASE}/items/${TABLES.clientes}?${query.toString()}`,
+      cacheBust,
+    ),
     { signal },
   )
 
@@ -315,47 +330,52 @@ const fetchManagerCustomerDetail = async (customerId) => {
 
   const documentoFields =
     'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion'
-  const documentoQueries = []
-  if (providerIds.length) {
-    const providerQuery = new URLSearchParams({
+    const buildDocumentoQuery = (field, ids, useNestedId = false) => {
+    const query = new URLSearchParams({
       'sort[]': 'id',
       fields: documentoFields,
     })
-    providerQuery.append('filter[idProveedor][_in]', providerIds.join(','))
-    documentoQueries.push(providerQuery)
-  }
-  if (personaIds.length) {
-    const personaQuery = new URLSearchParams({
-      'sort[]': 'id',
-      fields: documentoFields,
-    })
-    personaQuery.append('filter[idPersona][_in]', personaIds.join(','))
-    documentoQueries.push(personaQuery)
-  }
-  if (vehiculoIds.length) {
-    const vehiculoQuery = new URLSearchParams({
-      'sort[]': 'id',
-      fields: documentoFields,
-    })
-    vehiculoQuery.append('filter[idVehiculo][_in]', vehiculoIds.join(','))
-    documentoQueries.push(vehiculoQuery)
+    const filterKey = useNestedId
+      ? `filter[${field}][id][_in]`
+      : `filter[${field}][_in]`
+    query.append(filterKey, ids.join(','))
+    return query
   }
 
-  const documentosResponses = documentoQueries.length
-    ? await Promise.all(
-        documentoQueries.map((query) =>
-          safeFetchJSON(
-            withCacheBust(
-              `${API_BASE}/items/${TABLES.documentos}?${query.toString()}`,
-              cacheBust,
-            ),
-          ),
-        ),
-      )
-    : []
-  const documentos = documentosResponses.flatMap(
-    (response) => response?.data ?? [],
-  )
+  const fetchDocumentosByField = async (field, ids) => {
+    if (!ids.length) return []
+    const initialResponse = await safeFetchJSON(
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.documentos}?${buildDocumentoQuery(
+          field,
+          ids,
+        ).toString()}`,
+        cacheBust,
+      ),
+    )
+    if (!initialResponse?.error) {
+      return initialResponse?.data ?? []
+    }
+    const fallbackResponse = await safeFetchJSON(
+      withCacheBust(
+        `${API_BASE}/items/${TABLES.documentos}?${buildDocumentoQuery(
+          field,
+          ids,
+          true,
+        ).toString()}`,
+        cacheBust,
+      ),
+    )
+    return fallbackResponse?.data ?? []
+  }
+
+  const documentosResponses = await Promise.all([
+    fetchDocumentosByField('idProveedor', providerIds),
+    fetchDocumentosByField('idPersona', personaIds),
+    fetchDocumentosByField('idVehiculo', vehiculoIds),
+  ])
+
+  const documentos = documentosResponses.flat()
   const documentosById = documentos.reduce((acc, documento) => {
     if (documento?.id) acc.set(documento.id, documento)
     return acc
