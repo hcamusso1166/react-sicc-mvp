@@ -608,6 +608,24 @@ body {
   background: #f8fafc;
 }
 
+.manager-subcard-group {
+  background: #fff;
+  border-style: dashed;
+}
+
+.manager-subcard-group-content {
+  display: grid;
+  gap: 12px;
+}
+
+.manager-subcard-item {
+  background: #f8fafc;
+}
+
+.manager-subcard-item .manager-subcard-header h5 {
+  color: #334155;
+}
+
 .manager-documents-table-wrapper {
   overflow-x: auto;
 }

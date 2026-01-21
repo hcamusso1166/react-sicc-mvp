@@ -24,6 +24,11 @@ const getStatusClass = (status) => {
   return 'manager-documents-status--unknown'
 }
 
+const getEntityStatusLabel = (status) => {
+  if (!status) return 'Sin estado'
+  return status.toString().replace(/_/g, ' ')
+}
+
 const formatDate = (value) => {
   if (!value) return '-'
   const date = new Date(value)
@@ -188,30 +193,7 @@ const ProviderCard = ({
   getVehicleName,
   getVehiculoField,
 }) => {
-  const personaCards = providerPersonas.map((persona) => ({
-    key: `persona-${persona.id}`,
-    title: 'Documentos requeridos Persona',
-    meta: `${getPersonName(persona)} · DNI: ${getPersonaDocumento(persona)}`,
-    documents: documentosByPersona?.[persona.id] || [],
-    tableId: `persona-${persona.id}`,
-  }))
-
-  const vehiculoCards = providerVehiculos.map((vehiculo) => ({
-    key: `vehiculo-${vehiculo.id}`,
-    title: 'Documentos requeridos Vehículo',
-    meta: [
-      getVehicleName(vehiculo),
-      `Dominio: ${getVehiculoField(vehiculo.dominio)}`,
-      `Marca: ${getVehiculoField(vehiculo.marca)}`,
-      `Modelo: ${getVehiculoField(vehiculo.modelo)}`,
-    ]
-      .filter(Boolean)
-      .join(' · '),
-    documents: documentosByVehiculo?.[vehiculo.id] || [],
-    tableId: `vehiculo-${vehiculo.id}`,
-  }))
-
-  return (
+    return (
     <div className="manager-provider-card">
       <div className="manager-provider-top">
         <div className="manager-provider-summary">
@@ -221,7 +203,7 @@ const ProviderCard = ({
             Estado: {provider.status || 'Sin estado'}
           </span>
         </div>
-      <div className="manager-provider-actions">
+        <div className="manager-provider-actions">
           <Button
             as={Link}
             to="/clientes/proveedor/persona/nuevo"
@@ -249,44 +231,90 @@ const ProviderCard = ({
           getDocumentoName={getDocumentoName}
           tableId={`provider-${provider?.id ?? 'unknown'}`}
         />
-        {providerPersonas.length === 0 && (
-          <div className="manager-subcard">
-            <div className="manager-subcard-header">
-              <h5>Personas</h5>
-            </div>
+<div className="manager-subcard manager-subcard-group">
+          <div className="manager-subcard-header">
+            <h5>Personas</h5>
+            <span className="muted">
+              {providerPersonas.length === 1
+                ? '1 registrada'
+                : `${providerPersonas.length} registradas`}
+            </span>
+          </div>
+{providerPersonas.length === 0 && (
             <p className="muted">No hay personas registradas.</p>
-          </div>
-)}
-        {providerPersonas.length > 0 &&
-          personaCards.map((personaCard) => (
-            <DocumentsSubcard
-              key={personaCard.key}
-              title={personaCard.title}
-              meta={personaCard.meta}
-              documents={personaCard.documents}
-              getDocumentoName={getDocumentoName}
-              tableId={personaCard.tableId}
-            />
-          ))}
-        {providerVehiculos.length === 0 && (
-          <div className="manager-subcard">
-            <div className="manager-subcard-header">
-              <h5>Vehículos</h5>
+          )}
+          {providerPersonas.length > 0 && (
+            <div className="manager-subcard-group-content">
+              {providerPersonas.map((persona) => (
+                <div
+                  className="manager-subcard manager-subcard-item"
+                  key={`persona-${persona.id}`}
+                >
+                  <div className="manager-subcard-header">
+                    <h5>Persona</h5>
+                    <span className="muted">
+                      {getPersonName(persona)} · DNI:{' '}
+                      {getPersonaDocumento(persona)}
+                    </span>
+                    <span className="muted">
+                      Estado: {getEntityStatusLabel(persona?.status)}
+                    </span>
+                  </div>
+                  <DocumentsSubcard
+                    title="Documentos a Presentar"
+                    documents={documentosByPersona?.[persona.id] || []}
+                    getDocumentoName={getDocumentoName}
+                    tableId={`persona-${persona.id}`}
+                  />
+                </div>
+              ))}
             </div>
-            <p className="muted">No hay vehículos registrados.</p>
+          )}
+        </div>
+        <div className="manager-subcard manager-subcard-group">
+          <div className="manager-subcard-header">
+            <h5>Vehículos</h5>
+            <span className="muted">
+              {providerVehiculos.length === 1
+                ? '1 registrado'
+                : `${providerVehiculos.length} registrados`}
+            </span>
           </div>
-        )}
-        {providerVehiculos.length > 0 &&
-          vehiculoCards.map((vehiculoCard) => (
-            <DocumentsSubcard
-              key={vehiculoCard.key}
-              title={vehiculoCard.title}
-              meta={vehiculoCard.meta}
-              documents={vehiculoCard.documents}
-              getDocumentoName={getDocumentoName}
-              tableId={vehiculoCard.tableId}
-            />
-          ))}
+{providerVehiculos.length === 0 && (
+            <p className="muted">No hay vehículos registrados.</p>
+          )}
+          {providerVehiculos.length > 0 && (
+            <div className="manager-subcard-group-content">
+              {providerVehiculos.map((vehiculo) => (
+                <div
+                  className="manager-subcard manager-subcard-item"
+                  key={`vehiculo-${vehiculo.id}`}
+                >
+                  <div className="manager-subcard-header">
+                    <h5>Vehículo</h5>
+                    <span className="muted">
+                      {getVehicleName(vehiculo)} · Dominio:{' '}
+                      {getVehiculoField(vehiculo.dominio)}
+                    </span>
+                    <span className="muted">
+                      Marca: {getVehiculoField(vehiculo.marca)} · Modelo:{' '}
+                      {getVehiculoField(vehiculo.modelo)}
+                    </span>
+                    <span className="muted">
+                      Estado: {getEntityStatusLabel(vehiculo?.status)}
+                    </span>
+                  </div>
+                  <DocumentsSubcard
+                    title="Documentos a Presentar"
+                    documents={documentosByVehiculo?.[vehiculo.id] || []}
+                    getDocumentoName={getDocumentoName}
+                    tableId={`vehiculo-${vehiculo.id}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
