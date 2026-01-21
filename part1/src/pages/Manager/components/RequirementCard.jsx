@@ -12,6 +12,8 @@ const RequirementCard = ({
   site,
   providers,
   documentosByProvider,
+  documentosByPersona,
+  documentosByVehiculo,
   personasByProvider,
   vehiculosByProvider,
   onDocumentsCreated,
@@ -34,6 +36,24 @@ const RequirementCard = ({
     [providers, documentosByProvider],
   )
 
+   const personasWithoutDocs = useMemo(() => {
+    const allPersonas = providers.flatMap(
+      (provider) => personasByProvider?.[provider.id] || [],
+    )
+    return allPersonas.filter(
+      (persona) => (documentosByPersona?.[persona.id] || []).length === 0,
+    )
+  }, [providers, personasByProvider, documentosByPersona])
+
+  const vehiculosWithoutDocs = useMemo(() => {
+    const allVehiculos = providers.flatMap(
+      (provider) => vehiculosByProvider?.[provider.id] || [],
+    )
+    return allVehiculos.filter(
+      (vehiculo) => (documentosByVehiculo?.[vehiculo.id] || []).length === 0,
+    )
+  }, [providers, vehiculosByProvider, documentosByVehiculo])
+
   const handleCreateDocuments = async () => {
     setCreatingDocs(true)
     setCreateError('')
@@ -42,6 +62,10 @@ const RequirementCard = ({
       const result = await createProviderRequiredDocuments({
         providers,
         documentosByProvider,
+        personasByProvider,
+        vehiculosByProvider,
+        documentosByPersona,
+        documentosByVehiculo,
       })
       setCreateResult(result)
       if (onDocumentsCreated) {
@@ -103,12 +127,18 @@ const RequirementCard = ({
         {createResult && (
           <PanelCard className="manager-provider-message">
             <SuccessBanner>
-              Se generaron {createResult.created} documentos requeridos para{' '}
-              {createResult.providersProcessed} proveedores.
+              Se generaron {createResult.createdProviderDocs} documentos para
+              proveedores, {createResult.createdPersonaDocs} para personas y{' '}
+              {createResult.createdVehiculoDocs} para vehículos.
             </SuccessBanner>
             <p className="muted">
               Proveedores sin documentos previos: {providersWithoutDocs.length}.
-              &nbsp;Proveedores omitidos: {createResult.skippedProviders}.
+              &nbsp;Personas sin documentos previos: {personasWithoutDocs.length}
+              .&nbsp;Vehículos sin documentos previos:{' '}
+              {vehiculosWithoutDocs.length}.<br />
+              Proveedores omitidos: {createResult.skippedProviders}. Personas
+              omitidas: {createResult.skippedPersonas}. Vehículos omitidos:{' '}
+              {createResult.skippedVehiculos}.
             </p>
             <div className="manager-provider-message-actions">
               <Button
@@ -134,6 +164,8 @@ const RequirementCard = ({
             site={site}
             requirement={requirement}
             providerDocuments={documentosByProvider[provider.id] || []}
+            documentosByPersona={documentosByPersona}
+            documentosByVehiculo={documentosByVehiculo}           
             providerPersonas={personasByProvider[provider.id] || []}
             providerVehiculos={vehiculosByProvider[provider.id] || []}
             getDisplayName={getDisplayName}

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
-import PersonList from './PersonList'
-import VehicleList from './VehicleList'
 import StatusPill from '../../../components/StatusPill'
 
 const statusLabels = {
@@ -33,22 +31,15 @@ const formatDate = (value) => {
   return date.toLocaleDateString('es-AR')
 }
 
-const ProviderCard = ({
-  provider,
-  customer,
-  site,
-  requirement,
-  providerDocuments,
-  providerPersonas,
-  providerVehiculos,
-  getDisplayName,
+const DocumentsSubcard = ({
+  title,
+  documents,
   getDocumentoName,
-  getPersonName,
-  getPersonaDocumento,
-  getVehicleName,
-  getVehiculoField,
+  tableId,
+  meta,
+  emptyLabel = 'No hay documento para presentar.',
 }) => {
-  const documentsCount = providerDocuments.length
+  const documentsCount = documents.length
   const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true)
   const previousDocumentsCount = useRef(documentsCount)
 
@@ -62,7 +53,7 @@ const ProviderCard = ({
   }, [documentsCount])
 
   const sortedDocuments = useMemo(() => {
-    const documents = [...providerDocuments]
+    const documentsCopy = [...documents]
     const compareValues = (a, b) => {
       if (a == null && b == null) return 0
       if (a == null) return 1
@@ -78,7 +69,7 @@ const ProviderCard = ({
       documento?.tipoDocumento?.validezDocumentoDias ??
       null
 
-    return documents.sort((a, b) => {
+    return documentsCopy.sort((a, b) => {
       const dateA = a?.proximaFechaPresentacion
         ? new Date(a.proximaFechaPresentacion).getTime()
         : null
@@ -97,13 +88,128 @@ const ProviderCard = ({
         { sensitivity: 'base' },
       )
     })
-  }, [providerDocuments, getDocumentoName])
+  }, [documents, getDocumentoName])
 
   const toggleDocuments = () => {
     setIsDocumentsCollapsed((prevState) => !prevState)
   }
 
-  const documentsTableId = `provider-documents-${provider?.id ?? 'unknown'}`
+  const documentsTableId = `documents-${tableId}`
+
+  return (
+    <div className="manager-subcard">
+      <div className="manager-subcard-header">
+        <h5>{title}</h5>
+        {meta && <span className="muted">{meta}</span>}
+        {documentsCount > 0 && (
+          <Button
+            variant="ghost"
+            size="small"
+            onClick={toggleDocuments}
+            aria-expanded={!isDocumentsCollapsed}
+            aria-controls={documentsTableId}
+          >
+            {isDocumentsCollapsed ? 'Ver documentos' : 'Plegar documentos'}
+          </Button>
+        )}
+      </div>
+      {documentsCount === 0 && <p className="muted">{emptyLabel}</p>}
+      {documentsCount > 0 && isDocumentsCollapsed && (
+        <p className="muted">
+          {documentsCount === 1
+            ? 'Hay 1 documento para presentar.'
+            : `Hay ${documentsCount} documentos para presentar.`}
+        </p>
+      )}
+      {documentsCount > 0 && !isDocumentsCollapsed && (
+        <div className="manager-documents-table-wrapper" id={documentsTableId}>
+          <table className="manager-documents-table">
+            <thead>
+              <tr>
+                <th>Estado</th>
+                <th>Tipo</th>
+                <th>Documento</th>
+                <th>Fecha Pres.</th>
+                <th>Validez</th>
+                <th>Próxima</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedDocuments.map((documento) => {
+                const validez =
+                  documento?.validezDias ??
+                  documento?.tipoDocumento?.validezDocumentoDias ??
+                  null
+                const documentoName = getDocumentoName(documento)
+                return (
+                  <tr key={documento.id}>
+                    <td>
+                      <StatusPill
+                        className={[
+                          'manager-documents-status',
+                          getStatusClass(documento?.status),
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                      >
+                        {getStatusLabel(documento?.status)}
+                      </StatusPill>
+                    </td>
+                    <td>{documento?.idParametro ?? '-'}</td>
+                    <td>{documentoName}</td>
+                    <td>{formatDate(documento?.fechaPresentacion)}</td>
+                    <td>{validez ?? '-'}</td>
+                    <td>{formatDate(documento?.proximaFechaPresentacion)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const ProviderCard = ({
+  provider,
+  customer,
+  site,
+  requirement,
+  providerDocuments,
+  documentosByPersona,
+  documentosByVehiculo,
+  providerPersonas,
+  providerVehiculos,
+  getDisplayName,
+  getDocumentoName,
+  getPersonName,
+  getPersonaDocumento,
+  getVehicleName,
+  getVehiculoField,
+}) => {
+  const personaCards = providerPersonas.map((persona) => ({
+    key: `persona-${persona.id}`,
+    title: 'Documentos requeridos Persona',
+    meta: `${getPersonName(persona)} · DNI: ${getPersonaDocumento(persona)}`,
+    documents: documentosByPersona?.[persona.id] || [],
+    tableId: `persona-${persona.id}`,
+  }))
+
+  const vehiculoCards = providerVehiculos.map((vehiculo) => ({
+    key: `vehiculo-${vehiculo.id}`,
+    title: 'Documentos requeridos Vehículo',
+    meta: [
+      getVehicleName(vehiculo),
+      `Dominio: ${getVehiculoField(vehiculo.dominio)}`,
+      `Marca: ${getVehiculoField(vehiculo.marca)}`,
+      `Modelo: ${getVehiculoField(vehiculo.modelo)}`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    documents: documentosByVehiculo?.[vehiculo.id] || [],
+    tableId: `vehiculo-${vehiculo.id}`,
+  }))
 
   return (
     <div className="manager-provider-card">
@@ -136,104 +242,51 @@ const ProviderCard = ({
           </Button>
         </div>
       </div>
- <div className="manager-provider-subcards">
-        <div className="manager-subcard">
-          <div className="manager-subcard-header">
-            <h5>Documentos a Presentar</h5>
-            {documentsCount > 0 && (
-              <Button
-                variant="ghost"
-                size="small"
-                onClick={toggleDocuments}
-                aria-expanded={!isDocumentsCollapsed}
-                aria-controls={documentsTableId}
-              >
-                {isDocumentsCollapsed ? 'Ver documentos' : 'Plegar documentos'}
-              </Button>
-            )}
-          </div>
-          {documentsCount === 0 && (
-            <p className="muted">No hay documento para presentar.</p>
-          )}
-          {documentsCount > 0 && isDocumentsCollapsed && (
-            <p className="muted">
-              {documentsCount === 1
-                ? 'Hay 1 documento para presentar.'
-                : `Hay ${documentsCount} documentos para presentar.`}
-            </p>
-          )}
-          {documentsCount > 0 && !isDocumentsCollapsed && (
-            <div
-              className="manager-documents-table-wrapper"
-              id={documentsTableId}
-            >
-              <table className="manager-documents-table">
-                <thead>
-                  <tr>
-                    <th>Estado</th>
-                    <th>Tipo</th>
-                    <th>Documento</th>
-                    <th>Fecha Pres.</th>
-                    <th>Validez</th>
-                    <th>Próxima</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedDocuments.map((documento) => {
-                    const validez =
-                      documento?.validezDias ??
-                      documento?.tipoDocumento?.validezDocumentoDias ??
-                      null
-                    const documentoName = getDocumentoName(documento)
-                    return (
-                      <tr key={documento.id}>
-                        <td>
-                          <StatusPill
-                            className={[
-                              'manager-documents-status',
-                              getStatusClass(documento?.status),
-                            ]
-                              .filter(Boolean)
-                              .join(' ')}
-                          >
-                            {getStatusLabel(documento?.status)}
-                          </StatusPill>
-                        </td>
-                        <td>{documento?.idParametro ?? '-'}</td>
-                        <td>{documentoName}</td>
-                        <td>{formatDate(documento?.fechaPresentacion)}</td>
-                        <td>{validez ?? '-'}</td>
-                        <td>
-                          {formatDate(documento?.proximaFechaPresentacion)}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+      <div className="manager-provider-subcards">
+        <DocumentsSubcard
+          title="Documentos a Presentar"
+          documents={providerDocuments}
+          getDocumentoName={getDocumentoName}
+          tableId={`provider-${provider?.id ?? 'unknown'}`}
+        />
+        {providerPersonas.length === 0 && (
+          <div className="manager-subcard">
+            <div className="manager-subcard-header">
+              <h5>Personas</h5>
             </div>
-          )}
-        </div>
-        <div className="manager-subcard">
-          <div className="manager-subcard-header">
-            <h5>Personas</h5>
+            <p className="muted">No hay personas registradas.</p>
           </div>
-          <PersonList
-            personas={providerPersonas}
-            getPersonName={getPersonName}
-            getPersonaDocumento={getPersonaDocumento}
-          />
-        </div>
-        <div className="manager-subcard">
-          <div className="manager-subcard-header">
-            <h5>Vehículos</h5>
+)}
+        {providerPersonas.length > 0 &&
+          personaCards.map((personaCard) => (
+            <DocumentsSubcard
+              key={personaCard.key}
+              title={personaCard.title}
+              meta={personaCard.meta}
+              documents={personaCard.documents}
+              getDocumentoName={getDocumentoName}
+              tableId={personaCard.tableId}
+            />
+          ))}
+        {providerVehiculos.length === 0 && (
+          <div className="manager-subcard">
+            <div className="manager-subcard-header">
+              <h5>Vehículos</h5>
+            </div>
+            <p className="muted">No hay vehículos registrados.</p>
           </div>
-          <VehicleList
-            vehiculos={providerVehiculos}
-            getVehicleName={getVehicleName}
-            getVehiculoField={getVehiculoField}
-          />
-        </div>
+        )}
+        {providerVehiculos.length > 0 &&
+          vehiculoCards.map((vehiculoCard) => (
+            <DocumentsSubcard
+              key={vehiculoCard.key}
+              title={vehiculoCard.title}
+              meta={vehiculoCard.meta}
+              documents={vehiculoCard.documents}
+              getDocumentoName={getDocumentoName}
+              tableId={vehiculoCard.tableId}
+            />
+          ))}
       </div>
     </div>
   )

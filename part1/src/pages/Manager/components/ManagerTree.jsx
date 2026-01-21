@@ -6,6 +6,8 @@ const ManagerTree = ({
   requirementsBySite,
   providersByRequirement,
   documentosByProvider,
+  documentosByPersona,
+  documentosByVehiculo,
   personasByProvider,
   vehiculosByProvider,
   onDocumentsCreated,
@@ -25,6 +27,8 @@ const ManagerTree = ({
         requirements={requirementsBySite[site.id] || []}
         providersByRequirement={providersByRequirement}
         documentosByProvider={documentosByProvider}
+        documentosByPersona={documentosByPersona}
+        documentosByVehiculo={documentosByVehiculo}
         personasByProvider={personasByProvider}
         vehiculosByProvider={vehiculosByProvider}
         onDocumentsCreated={onDocumentsCreated}

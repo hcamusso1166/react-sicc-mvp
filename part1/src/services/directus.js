@@ -310,29 +310,60 @@ const fetchManagerCustomerDetail = async (customerId) => {
 
   const personas = personasResponse?.data ?? []
   const vehiculos = vehiculosResponse?.data ?? []
+  const personaIds = personas.map((persona) => persona.id).filter(Boolean)
+  const vehiculoIds = vehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
 
-  const documentoQuery = new URLSearchParams({
-    'sort[]': 'id',
-    fields:
-      'id,status,idProveedor,idParametro,fechaPresentacion,proximaFechaPresentacion',
-  })
+  const documentoFields =
+    'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion'
+  const documentoQueries = []
   if (providerIds.length) {
-    documentoQuery.append('filter[idProveedor][_in]', providerIds.join(','))
+    const providerQuery = new URLSearchParams({
+      'sort[]': 'id',
+      fields: documentoFields,
+    })
+    providerQuery.append('filter[idProveedor][_in]', providerIds.join(','))
+    documentoQueries.push(providerQuery)
   }
-    const documentosResponse =
-    providerIds.length
-      ? await safeFetchJSON(
-          withCacheBust(
-            `${API_BASE}/items/${TABLES.documentos}?${documentoQuery.toString()}`,
-            cacheBust,
-          ),
-        )
-      : { data: [] }
+  if (personaIds.length) {
+    const personaQuery = new URLSearchParams({
+      'sort[]': 'id',
+      fields: documentoFields,
+    })
+    personaQuery.append('filter[idPersona][_in]', personaIds.join(','))
+    documentoQueries.push(personaQuery)
+  }
+  if (vehiculoIds.length) {
+    const vehiculoQuery = new URLSearchParams({
+      'sort[]': 'id',
+      fields: documentoFields,
+    })
+    vehiculoQuery.append('filter[idVehiculo][_in]', vehiculoIds.join(','))
+    documentoQueries.push(vehiculoQuery)
+  }
 
-     const documentos = documentosResponse?.data ?? []
+  const documentosResponses = documentoQueries.length
+    ? await Promise.all(
+        documentoQueries.map((query) =>
+          safeFetchJSON(
+            withCacheBust(
+              `${API_BASE}/items/${TABLES.documentos}?${query.toString()}`,
+              cacheBust,
+            ),
+          ),
+        ),
+      )
+    : []
+  const documentos = documentosResponses.flatMap(
+    (response) => response?.data ?? [],
+  )
+  const documentosById = documentos.reduce((acc, documento) => {
+    if (documento?.id) acc.set(documento.id, documento)
+    return acc
+  }, new Map())
+  const documentosUnique = [...documentosById.values()]
   const documentoTipoIds = [
     ...new Set(
-      documentos
+      documentosUnique
         .map((documento) => getRelationId(documento.idParametro))
         .filter(Boolean),
     ),
@@ -353,7 +384,7 @@ const fetchManagerCustomerDetail = async (customerId) => {
     if (tipo?.id) acc.set(tipo.id, tipo)
     return acc
   }, new Map())
-  const documentosEnriched = documentos.map((documento) => {
+  const documentosEnriched = documentosUnique.map((documento) => {
     const tipo = tiposById.get(getRelationId(documento.idParametro))
     return tipo ? { ...documento, tipoDocumento: tipo } : documento
   })
@@ -409,6 +440,10 @@ const createVehiculo = async (payload) => {
 const createProviderRequiredDocuments = async ({
   providers,
   documentosByProvider,
+  personasByProvider,
+  vehiculosByProvider,
+  documentosByPersona,
+  documentosByVehiculo,
   signal,
 }) => {
   const eligibleProviders = (providers || []).filter((provider) => {
@@ -417,11 +452,39 @@ const createProviderRequiredDocuments = async ({
   })
   const skippedProviders = (providers || []).length - eligibleProviders.length
 
-  if (eligibleProviders.length === 0) {
+  const allPersonas = (providers || []).flatMap(
+    (provider) => personasByProvider?.[provider.id] || [],
+  )
+  const allVehiculos = (providers || []).flatMap(
+    (provider) => vehiculosByProvider?.[provider.id] || [],
+  )
+
+  const eligiblePersonas = allPersonas.filter((persona) => {
+    const personaDocs = documentosByPersona?.[persona.id] || []
+    return personaDocs.length === 0
+  })
+  const eligibleVehiculos = allVehiculos.filter((vehiculo) => {
+    const vehiculoDocs = documentosByVehiculo?.[vehiculo.id] || []
+    return vehiculoDocs.length === 0
+  })
+  const skippedPersonas = allPersonas.length - eligiblePersonas.length
+  const skippedVehiculos = allVehiculos.length - eligibleVehiculos.length
+
+  if (
+    eligibleProviders.length === 0 &&
+    eligiblePersonas.length === 0 &&
+    eligibleVehiculos.length === 0
+  ) {
     return {
-      created: 0,
+      createdProviderDocs: 0,
+      createdPersonaDocs: 0,
+      createdVehiculoDocs: 0,
       providersProcessed: 0,
+      personasProcessed: 0,
+      vehiculosProcessed: 0,
       skippedProviders,
+      skippedPersonas,
+      skippedVehiculos,
       parametrosCount: 0,
     }
   }
@@ -429,7 +492,7 @@ const createProviderRequiredDocuments = async ({
   const today = new Date().toISOString().split('T')[0]
   const parametrosQuery = new URLSearchParams({
     fields: 'id,idTipoDocumento,idTipoEntidad,fechaDesde,fechaHasta',
-    'filter[idTipoEntidad][_in]': '1,2',
+    'filter[idTipoEntidad][_in]': '1,2,3,4',
     'filter[fechaDesde][_lte]': today,
     'filter[fechaHasta][_gte]': today,
   })
@@ -441,14 +504,21 @@ const createProviderRequiredDocuments = async ({
   )
   const parametros = parametrosResponse?.data ?? []
 
-  if (parametros.length === 0) {
-    return {
-      created: 0,
-      providersProcessed: eligibleProviders.length,
-      skippedProviders,
-      parametrosCount: 0,
-    }
-  }
+  const parametrosByEntidad = parametros.reduce((acc, parametro) => {
+    const tipoEntidad = Number(
+      getRelationId(parametro?.idTipoEntidad) ?? parametro?.idTipoEntidad ?? 0,
+    )
+    if (!acc[tipoEntidad]) acc[tipoEntidad] = []
+    acc[tipoEntidad].push(parametro)
+    return acc
+  }, {})
+
+  const providerParametros = [
+    ...(parametrosByEntidad[1] || []),
+    ...(parametrosByEntidad[2] || []),
+  ]
+  const personaParametros = parametrosByEntidad[3] || []
+  const vehiculoParametros = parametrosByEntidad[4] || []
 
   const tipoDocumentoIds = [
     ...new Set(
@@ -459,9 +529,15 @@ const createProviderRequiredDocuments = async ({
   ]
   if (tipoDocumentoIds.length === 0) {
     return {
-      created: 0,
+      createdProviderDocs: 0,
+      createdPersonaDocs: 0,
+      createdVehiculoDocs: 0,
       providersProcessed: eligibleProviders.length,
+      personasProcessed: eligiblePersonas.length,
+      vehiculosProcessed: eligibleVehiculos.length,
       skippedProviders,
+      skippedPersonas,
+      skippedVehiculos,
       parametrosCount: parametros.length,
     }
   }
@@ -481,8 +557,9 @@ const createProviderRequiredDocuments = async ({
   }, new Map())
 
   const documentosToCreate = []
+
   eligibleProviders.forEach((provider) => {
-    parametros.forEach((parametro) => {
+    providerParametros.forEach((parametro) => {
       const tipoId = getRelationId(parametro.idTipoDocumento)
       const tipoDocumento = tiposById.get(tipoId)
       if (!tipoDocumento) return
@@ -495,11 +572,45 @@ const createProviderRequiredDocuments = async ({
     })
   })
 
+  eligiblePersonas.forEach((persona) => {
+    personaParametros.forEach((parametro) => {
+      const tipoId = getRelationId(parametro.idTipoDocumento)
+      const tipoDocumento = tiposById.get(tipoId)
+      if (!tipoDocumento) return
+      documentosToCreate.push({
+        status: 'toPresent',
+        validezDias: tipoDocumento.validezDocumentoDias ?? null,
+        idPersona: persona.id,
+        idParametro: tipoDocumento.id,
+      })
+    })
+  })
+
+  eligibleVehiculos.forEach((vehiculo) => {
+    vehiculoParametros.forEach((parametro) => {
+      const tipoId = getRelationId(parametro.idTipoDocumento)
+      const tipoDocumento = tiposById.get(tipoId)
+      if (!tipoDocumento) return
+      documentosToCreate.push({
+        status: 'toPresent',
+        validezDias: tipoDocumento.validezDocumentoDias ?? null,
+        idVehiculo: vehiculo.id,
+        idParametro: tipoDocumento.id,
+      })
+    })
+  })
+
   if (!documentosToCreate.length) {
     return {
-      created: 0,
+      createdProviderDocs: 0,
+      createdPersonaDocs: 0,
+      createdVehiculoDocs: 0,
       providersProcessed: eligibleProviders.length,
+      personasProcessed: eligiblePersonas.length,
+      vehiculosProcessed: eligibleVehiculos.length,
       skippedProviders,
+      skippedPersonas,
+      skippedVehiculos,
       parametrosCount: parametros.length,
     }
   }
@@ -510,10 +621,26 @@ const createProviderRequiredDocuments = async ({
     { signal },
   )
 
+  const createdProviderDocs = documentosToCreate.filter(
+    (documento) => documento.idProveedor,
+  ).length
+  const createdPersonaDocs = documentosToCreate.filter(
+    (documento) => documento.idPersona,
+  ).length
+  const createdVehiculoDocs = documentosToCreate.filter(
+    (documento) => documento.idVehiculo,
+  ).length
+
   return {
-    created: documentosToCreate.length,
+    createdProviderDocs,
+    createdPersonaDocs,
+    createdVehiculoDocs,
     providersProcessed: eligibleProviders.length,
+    personasProcessed: eligiblePersonas.length,
+    vehiculosProcessed: eligibleVehiculos.length,
     skippedProviders,
+    skippedPersonas,
+    skippedVehiculos,
     parametrosCount: parametros.length,
     createdDocuments: createResponse?.data ?? [],
   }

@@ -149,7 +149,7 @@ const ManagerPage = () => {
     }
   }, [customerId])
 
-    useEffect(() => {
+  useEffect(() => {
     reloadDetail()
   }, [reloadDetail])
 
@@ -182,6 +182,16 @@ const ManagerPage = () => {
   const documentosByProvider = useMemo(() => {
     if (!detail?.documentos) return {}
     return groupBy(detail.documentos, (doc) => getRelationId(doc.idProveedor))
+  }, [detail])
+
+    const documentosByPersona = useMemo(() => {
+    if (!detail?.documentos) return {}
+    return groupBy(detail.documentos, (doc) => getRelationId(doc.idPersona))
+  }, [detail])
+
+  const documentosByVehiculo = useMemo(() => {
+    if (!detail?.documentos) return {}
+    return groupBy(detail.documentos, (doc) => getRelationId(doc.idVehiculo))
   }, [detail])
 
   if (!customerId) {
@@ -267,6 +277,8 @@ const ManagerPage = () => {
         requirementsBySite={requirementsBySite}
         providersByRequirement={providersByRequirement}
         documentosByProvider={documentosByProvider}
+        documentosByPersona={documentosByPersona}
+        documentosByVehiculo={documentosByVehiculo}       
         personasByProvider={personasByProvider}
         vehiculosByProvider={vehiculosByProvider}
         onDocumentsCreated={reloadDetail}

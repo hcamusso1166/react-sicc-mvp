@@ -8,6 +8,8 @@ const SiteCard = ({
   requirements,
   providersByRequirement,
   documentosByProvider,
+  documentosByPersona,
+  documentosByVehiculo,
   personasByProvider,
   vehiculosByProvider,
   onDocumentsCreated,
@@ -46,6 +48,8 @@ const SiteCard = ({
           site={site}
           providers={providersByRequirement[requirement.id] || []}
           documentosByProvider={documentosByProvider}
+          documentosByPersona={documentosByPersona}
+          documentosByVehiculo={documentosByVehiculo}
           personasByProvider={personasByProvider}
           vehiculosByProvider={vehiculosByProvider}
           onDocumentsCreated={onDocumentsCreated}
