@@ -51,6 +51,13 @@ const safeFetchJSON = async (url, options) => {
   }
 }
 
+const fetchCollectionFields = async (collection) => {
+  const response = await safeFetchJSON(`${API_BASE}/fields/${collection}?limit=-1`)
+  if (response?.error) return null
+  const fields = response?.data ?? []
+  return new Set(fields.map((field) => field?.field).filter(Boolean))
+}
+
 const getRelationId = (value) => {
   if (Array.isArray(value)) {
     return value[0]?.id ?? value[0]
@@ -327,10 +334,11 @@ const fetchManagerCustomerDetail = async (customerId) => {
   const vehiculos = vehiculosResponse?.data ?? []
   const personaIds = personas.map((persona) => persona.id).filter(Boolean)
   const vehiculoIds = vehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
+  const documentosFieldSet = await fetchCollectionFields(TABLES.documentos)
 
   const documentoFields =
     'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion'
-    const buildDocumentoQuery = (field, ids, useNestedId = false) => {
+  const buildDocumentoQuery = (field, ids, useNestedId = false) => {
     const query = new URLSearchParams({
       'sort[]': 'id',
       fields: documentoFields,
@@ -343,6 +351,7 @@ const fetchManagerCustomerDetail = async (customerId) => {
   }
 
   const fetchDocumentosByField = async (field, ids) => {
+    if (documentosFieldSet && !documentosFieldSet.has(field)) return []
     if (!ids.length) return []
     const initialResponse = await safeFetchJSON(
       withCacheBust(
