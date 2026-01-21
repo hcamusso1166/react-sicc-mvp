@@ -14,6 +14,8 @@ const DASHBOARD_TABLES = {
 const TABLES = {
   ...DASHBOARD_TABLES,
   documentos: 'DocumentosRequeridos',
+  documentosPersonas: 'documentosRequeridosPersonas',
+  documentosVehiculos: 'documentosRequeridosVehiculos',
   parametrosDocumentosRequeridosProveedor: 'parametrosDocumentosRequeridosProveedor',
   personas: 'persona',
   tiposDocumentos: 'tiposDocumentos',
@@ -49,13 +51,6 @@ const safeFetchJSON = async (url, options) => {
   } catch (error) {
     return { data: [], error }
   }
-}
-
-const fetchCollectionFields = async (collection) => {
-  const response = await safeFetchJSON(`${API_BASE}/fields/${collection}?limit=-1`)
-  if (response?.error) return null
-  const fields = response?.data ?? []
-  return new Set(fields.map((field) => field?.field).filter(Boolean))
 }
 
 const getRelationId = (value) => {
@@ -334,8 +329,6 @@ const fetchManagerCustomerDetail = async (customerId) => {
   const vehiculos = vehiculosResponse?.data ?? []
   const personaIds = personas.map((persona) => persona.id).filter(Boolean)
   const vehiculoIds = vehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
-  const documentosFieldSet = await fetchCollectionFields(TABLES.documentos)
-
   const documentoFields =
     'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion'
   const buildDocumentoQuery = (field, ids, useNestedId = false) => {
@@ -350,12 +343,11 @@ const fetchManagerCustomerDetail = async (customerId) => {
     return query
   }
 
-  const fetchDocumentosByField = async (field, ids) => {
-    if (documentosFieldSet && !documentosFieldSet.has(field)) return []
+  const fetchDocumentosByField = async (table, field, ids) => {
     if (!ids.length) return []
     const initialResponse = await safeFetchJSON(
       withCacheBust(
-        `${API_BASE}/items/${TABLES.documentos}?${buildDocumentoQuery(
+        `${API_BASE}/items/${table}?${buildDocumentoQuery(
           field,
           ids,
         ).toString()}`,
@@ -367,7 +359,7 @@ const fetchManagerCustomerDetail = async (customerId) => {
     }
     const fallbackResponse = await safeFetchJSON(
       withCacheBust(
-        `${API_BASE}/items/${TABLES.documentos}?${buildDocumentoQuery(
+        `${API_BASE}/items/${table}?${buildDocumentoQuery(
           field,
           ids,
           true,
@@ -379,9 +371,13 @@ const fetchManagerCustomerDetail = async (customerId) => {
   }
 
   const documentosResponses = await Promise.all([
-    fetchDocumentosByField('idProveedor', providerIds),
-    fetchDocumentosByField('idPersona', personaIds),
-    fetchDocumentosByField('idVehiculo', vehiculoIds),
+    fetchDocumentosByField(TABLES.documentos, 'idProveedor', providerIds),
+    fetchDocumentosByField(TABLES.documentosPersonas, 'idPersona', personaIds),
+    fetchDocumentosByField(
+      TABLES.documentosVehiculos,
+      'idVehiculo',
+      vehiculoIds,
+    ),
   ])
 
   const documentos = documentosResponses.flat()
@@ -585,14 +581,16 @@ const createProviderRequiredDocuments = async ({
     return acc
   }, new Map())
 
-  const documentosToCreate = []
+  const providerDocumentsToCreate = []
+  const personaDocumentsToCreate = []
+  const vehiculoDocumentsToCreate = []
 
   eligibleProviders.forEach((provider) => {
     providerParametros.forEach((parametro) => {
       const tipoId = getRelationId(parametro.idTipoDocumento)
       const tipoDocumento = tiposById.get(tipoId)
       if (!tipoDocumento) return
-      documentosToCreate.push({
+      providerDocumentsToCreate.push({
         status: 'toPresent',
         validezDias: tipoDocumento.validezDocumentoDias ?? null,
         idProveedor: provider.id,
@@ -606,7 +604,7 @@ const createProviderRequiredDocuments = async ({
       const tipoId = getRelationId(parametro.idTipoDocumento)
       const tipoDocumento = tiposById.get(tipoId)
       if (!tipoDocumento) return
-      documentosToCreate.push({
+      personaDocumentsToCreate.push({
         status: 'toPresent',
         validezDias: tipoDocumento.validezDocumentoDias ?? null,
         idPersona: persona.id,
@@ -620,7 +618,7 @@ const createProviderRequiredDocuments = async ({
       const tipoId = getRelationId(parametro.idTipoDocumento)
       const tipoDocumento = tiposById.get(tipoId)
       if (!tipoDocumento) return
-      documentosToCreate.push({
+      vehiculoDocumentsToCreate.push({
         status: 'toPresent',
         validezDias: tipoDocumento.validezDocumentoDias ?? null,
         idVehiculo: vehiculo.id,
@@ -629,7 +627,11 @@ const createProviderRequiredDocuments = async ({
     })
   })
 
-  if (!documentosToCreate.length) {
+  if (
+    !providerDocumentsToCreate.length &&
+    !personaDocumentsToCreate.length &&
+    !vehiculoDocumentsToCreate.length
+  ) {
     return {
       createdProviderDocs: 0,
       createdPersonaDocs: 0,
@@ -644,22 +646,36 @@ const createProviderRequiredDocuments = async ({
     }
   }
 
-  const createResponse = await postJSON(
-    `${API_BASE}/items/${TABLES.documentos}`,
-    documentosToCreate,
-    { signal },
-  )
+  const createResponses = await Promise.all([
+    providerDocumentsToCreate.length
+      ? postJSON(
+          `${API_BASE}/items/${TABLES.documentos}`,
+          providerDocumentsToCreate,
+          { signal },
+        )
+      : Promise.resolve({ data: [] }),
+    personaDocumentsToCreate.length
+      ? postJSON(
+          `${API_BASE}/items/${TABLES.documentosPersonas}`,
+          personaDocumentsToCreate,
+          { signal },
+        )
+      : Promise.resolve({ data: [] }),
+    vehiculoDocumentsToCreate.length
+      ? postJSON(
+          `${API_BASE}/items/${TABLES.documentosVehiculos}`,
+          vehiculoDocumentsToCreate,
+          { signal },
+        )
+      : Promise.resolve({ data: [] }),
+  ])
 
-  const createdProviderDocs = documentosToCreate.filter(
-    (documento) => documento.idProveedor,
-  ).length
-  const createdPersonaDocs = documentosToCreate.filter(
-    (documento) => documento.idPersona,
-  ).length
-  const createdVehiculoDocs = documentosToCreate.filter(
-    (documento) => documento.idVehiculo,
-  ).length
-
+    const [providerCreateResponse, personaCreateResponse, vehiculoCreateResponse] =
+    createResponses
+  const createdProviderDocs = providerDocumentsToCreate.length
+  const createdPersonaDocs = personaDocumentsToCreate.length
+  const createdVehiculoDocs = vehiculoDocumentsToCreate.length
+  
   return {
     createdProviderDocs,
     createdPersonaDocs,
@@ -671,7 +687,11 @@ const createProviderRequiredDocuments = async ({
     skippedPersonas,
     skippedVehiculos,
     parametrosCount: parametros.length,
-    createdDocuments: createResponse?.data ?? [],
+    createdDocuments: [
+      ...(providerCreateResponse?.data ?? []),
+      ...(personaCreateResponse?.data ?? []),
+      ...(vehiculoCreateResponse?.data ?? []),
+    ],
   }
 }
 
