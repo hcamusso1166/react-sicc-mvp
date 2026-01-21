@@ -23,15 +23,21 @@ const TABLES = {
 }
 
 const fetchJSON = async (url, options = {}) => {
+    const baseHeaders = {
+    'Cache-Control': 'no-store',
+    Pragma: 'no-cache',
+    Expires: '0',
+    ...options.headers,
+  }
   const response = await fetch(url, {
     cache: 'no-store',
     signal: options.signal,
     headers: DIRECTUS_TOKEN
       ? {
           Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-          ...options.headers,
+          ...baseHeaders,
         }
-      : options.headers,
+      : baseHeaders,
   })
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`)
@@ -63,17 +69,23 @@ const getRelationId = (value) => {
   return value
 }
 const postJSON = async (url, payload, options = {}) => {
+    const baseHeaders = {
+    'Cache-Control': 'no-store',
+    Pragma: 'no-cache',
+    Expires: '0',
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
   const response = await fetch(url, {
     method: 'POST',
     signal: options.signal,
     headers: {
-      'Content-Type': 'application/json',
       ...(DIRECTUS_TOKEN
         ? {
             Authorization: `Bearer ${DIRECTUS_TOKEN}`,
           }
         : {}),
-      ...options.headers,
+      ...baseHeaders,
     },
     body: JSON.stringify(payload),
   })
@@ -471,25 +483,124 @@ const createProviderRequiredDocuments = async ({
   documentosByVehiculo,
   signal,
 }) => {
-  const eligibleProviders = (providers || []).filter((provider) => {
-    const providerDocs = documentosByProvider?.[provider.id] || []
-    return providerDocs.length === 0
-  })
-  const skippedProviders = (providers || []).length - eligibleProviders.length
-
+  const cacheBust = Date.now().toString()
+  const providerIds = (providers || [])
+    .map((provider) => provider.id)
+    .filter(Boolean)
   const allPersonas = (providers || []).flatMap(
     (provider) => personasByProvider?.[provider.id] || [],
   )
   const allVehiculos = (providers || []).flatMap(
     (provider) => vehiculosByProvider?.[provider.id] || [],
   )
+const personaIds = allPersonas.map((persona) => persona.id).filter(Boolean)
+  const vehiculoIds = allVehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
+
+  const buildExistingDocsQuery = (field, ids, useNestedId = false) => {
+    const query = new URLSearchParams({
+      'sort[]': 'id',
+      fields: `id,${field}`,
+    })
+    const filterKey = useNestedId
+      ? `filter[${field}][id][_in]`
+      : `filter[${field}][_in]`
+    query.append(filterKey, ids.join(','))
+    return query
+  }
+
+  const fetchExistingDocsByField = async (table, field, ids) => {
+    if (!ids.length) return { data: [] }
+    const initialResponse = await safeFetchJSON(
+      withCacheBust(
+        `${API_BASE}/items/${table}?${buildExistingDocsQuery(
+          field,
+          ids,
+        ).toString()}`,
+        cacheBust,
+      ),
+    )
+    if (!initialResponse?.error) {
+      return initialResponse
+    }
+    return safeFetchJSON(
+      withCacheBust(
+        `${API_BASE}/items/${table}?${buildExistingDocsQuery(
+          field,
+          ids,
+          true,
+        ).toString()}`,
+        cacheBust,
+      ),
+    )
+  }
+
+  const [
+    providerDocsResponse,
+    personaDocsResponse,
+    vehiculoDocsResponse,
+  ] = await Promise.all([
+    fetchExistingDocsByField(TABLES.documentos, 'idProveedor', providerIds),
+    fetchExistingDocsByField(TABLES.documentosPersonas, 'idPersona', personaIds),
+    fetchExistingDocsByField(
+      TABLES.documentosVehiculos,
+      'idVehiculo',
+      vehiculoIds,
+    ),
+  ])
+
+  const providerDocsFromServer = providerDocsResponse?.error
+    ? null
+    : providerDocsResponse?.data ?? []
+  const personaDocsFromServer = personaDocsResponse?.error
+    ? null
+    : personaDocsResponse?.data ?? []
+  const vehiculoDocsFromServer = vehiculoDocsResponse?.error
+    ? null
+    : vehiculoDocsResponse?.data ?? []
+
+  const providerDocsById =
+    providerDocsFromServer !== null
+      ? providerDocsFromServer.reduce((acc, doc) => {
+          const providerId = getRelationId(doc.idProveedor)
+          if (!providerId) return acc
+          if (!acc[providerId]) acc[providerId] = []
+          acc[providerId].push(doc)
+          return acc
+        }, {})
+      : documentosByProvider || {}
+  const personaDocsById =
+    personaDocsFromServer !== null
+      ? personaDocsFromServer.reduce((acc, doc) => {
+          const personaId = getRelationId(doc.idPersona)
+          if (!personaId) return acc
+          if (!acc[personaId]) acc[personaId] = []
+          acc[personaId].push(doc)
+          return acc
+        }, {})
+      : documentosByPersona || {}
+  const vehiculoDocsById =
+    vehiculoDocsFromServer !== null
+      ? vehiculoDocsFromServer.reduce((acc, doc) => {
+          const vehiculoId = getRelationId(doc.idVehiculo)
+          if (!vehiculoId) return acc
+          if (!acc[vehiculoId]) acc[vehiculoId] = []
+          acc[vehiculoId].push(doc)
+          return acc
+        }, {})
+      : documentosByVehiculo || {}
+
+  const eligibleProviders = (providers || []).filter((provider) => {
+    const providerDocs = providerDocsById?.[provider.id] || []
+    return providerDocs.length === 0
+  })
+  const skippedProviders = (providers || []).length - eligibleProviders.length
 
   const eligiblePersonas = allPersonas.filter((persona) => {
-    const personaDocs = documentosByPersona?.[persona.id] || []
+    const personaDocs = personaDocsById?.[persona.id] || []
     return personaDocs.length === 0
   })
   const eligibleVehiculos = allVehiculos.filter((vehiculo) => {
-    const vehiculoDocs = documentosByVehiculo?.[vehiculo.id] || []
+    const vehiculoDocs = vehiculoDocsById?.[vehiculo.id] || []
     return vehiculoDocs.length === 0
   })
   const skippedPersonas = allPersonas.length - eligiblePersonas.length
