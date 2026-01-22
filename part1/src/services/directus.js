@@ -22,22 +22,25 @@ const TABLES = {
   vehiculos: 'vehiculo',
 }
 
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  Pragma: 'no-cache',
+  Expires: '0',
+}
+
 const fetchJSON = async (url, options = {}) => {
-    const baseHeaders = {
-    'Cache-Control': 'no-store',
-    Pragma: 'no-cache',
-    Expires: '0',
-    ...options.headers,
-  }
   const response = await fetch(url, {
     cache: 'no-store',
     signal: options.signal,
-    headers: DIRECTUS_TOKEN
-      ? {
-          Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-          ...baseHeaders,
-        }
-      : baseHeaders,
+    headers: {
+      ...NO_CACHE_HEADERS,
+      ...(DIRECTUS_TOKEN
+        ? {
+            Authorization: `Bearer ${DIRECTUS_TOKEN}`,
+          }
+        : {}),
+      ...options.headers,
+    },
   })
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`)
@@ -69,23 +72,18 @@ const getRelationId = (value) => {
   return value
 }
 const postJSON = async (url, payload, options = {}) => {
-    const baseHeaders = {
-    'Cache-Control': 'no-store',
-    Pragma: 'no-cache',
-    Expires: '0',
-    'Content-Type': 'application/json',
-    ...options.headers,
-  }
   const response = await fetch(url, {
     method: 'POST',
     signal: options.signal,
     headers: {
+      'Content-Type': 'application/json',
+      ...NO_CACHE_HEADERS,
       ...(DIRECTUS_TOKEN
         ? {
             Authorization: `Bearer ${DIRECTUS_TOKEN}`,
           }
         : {}),
-      ...baseHeaders,
+      ...options.headers,
     },
     body: JSON.stringify(payload),
   })
