@@ -81,9 +81,11 @@ const RequirementCard = ({
   return (
     <div className="manager-requirement-card">
       <div className="manager-tree-header">
-        <div>
+        <div className="manager-tree-title">
           <h4>Requerimiento: {getDisplayName(requirement)}</h4>
-          <p className="muted">Estado: {requirement.status || 'Sin estado'}</p>
+          <span className="muted">
+            Estado: {requirement.status || 'Sin estado'}
+          </span>
         </div>
         <Button
           as={Link}

@@ -22,9 +22,11 @@ const SiteCard = ({
 }) => (
   <div className="manager-tree-card">
     <div className="manager-tree-header">
-      <div>
+      <div className="manager-tree-title">
         <h3>Site: {getDisplayName(site)}</h3>
-        <p className="muted">Estado: {site.status || 'Sin estado'}</p>
+        <span className="muted">
+          Estado: {site.status || 'Sin estado'}
+        </span>
       </div>
       <Button
         as={Link}

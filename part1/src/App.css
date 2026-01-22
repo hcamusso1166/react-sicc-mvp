@@ -484,6 +484,13 @@ body {
   align-items: center;
 }
 
+.manager-inline-meta {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .manager-tree {
   display: flex;
   flex-direction: column;
@@ -498,6 +505,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.manager-tree-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
 }
 
 .manager-tree-header {
@@ -713,6 +727,12 @@ body {
   border-bottom: 1px solid #e2e8f0;
 }
 
+.manager-documents-actions-head {
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
 .manager-documents-table tbody td {
   padding: 10px 12px;
   border-bottom: 1px solid #e2e8f0;
@@ -749,6 +769,40 @@ body {
 
 .manager-documents-status--unknown {
   background: #94a3b8;
+}
+
+.manager-documents-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.manager-documents-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.manager-documents-action-button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
+}
+
+.manager-documents-action-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 900px) {
