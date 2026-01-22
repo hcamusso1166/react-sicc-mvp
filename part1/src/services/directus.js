@@ -4,6 +4,24 @@ const API_BASE =
 
 const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
 
+const getStoredToken = () => {
+  if (DIRECTUS_TOKEN) return DIRECTUS_TOKEN
+  if (typeof window === 'undefined') return ''
+  return (
+    window.localStorage?.getItem('directus_token') ||
+    window.localStorage?.getItem('directusToken') ||
+    ''
+  )
+}
+
+const getAuthHeaders = () => {
+  const token = getStoredToken()
+  if (!token) return {}
+  return {
+    Authorization: `Bearer ${token}`,
+  }
+}
+
 const DASHBOARD_TABLES = {
   clientes: 'Clientes',
   sites: 'sites',
@@ -34,11 +52,7 @@ const fetchJSON = async (url, options = {}) => {
     signal: options.signal,
     headers: {
       ...NO_CACHE_HEADERS,
-      ...(DIRECTUS_TOKEN
-        ? {
-            Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-          }
-        : {}),
+      ...getAuthHeaders(),
       ...options.headers,
     },
   })
@@ -78,11 +92,7 @@ const postJSON = async (url, payload, options = {}) => {
     headers: {
       'Content-Type': 'application/json',
       ...NO_CACHE_HEADERS,
-      ...(DIRECTUS_TOKEN
-        ? {
-            Authorization: `Bearer ${DIRECTUS_TOKEN}`,
-          }
-        : {}),
+...getAuthHeaders(),
       ...options.headers,
     },
     body: JSON.stringify(payload),
@@ -91,6 +101,71 @@ const postJSON = async (url, payload, options = {}) => {
     throw new Error(`Request failed: ${response.status}`)
   }
   return response.json()
+}
+
+const patchJSON = async (url, payload, options = {}) => {
+  const response = await fetch(url, {
+    method: 'PATCH',
+    signal: options.signal,
+    headers: {
+      'Content-Type': 'application/json',
+      ...NO_CACHE_HEADERS,
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`)
+  }
+  return response.json()
+}
+
+const uploadDirectusFile = async (file, options = {}) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await fetch(`${API_BASE}/files`, {
+    method: 'POST',
+    signal: options.signal,
+    headers: {
+      ...NO_CACHE_HEADERS,
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+    body: formData,
+  })
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`)
+  }
+  return response.json()
+}
+
+const updateProviderDocumentFile = async ({ documentoId, archivoId }) => {
+  const today = new Date().toISOString().split('T')[0]
+  const response = await patchJSON(
+    `${API_BASE}/items/${TABLES.documentos}/${documentoId}`,
+    {
+      archivo: archivoId,
+      status: 'presented',
+      fechaPresentacion: today,
+    },
+  )
+  return response?.data
+}
+
+const updateProviderDocumentStatus = async ({
+  documentoId,
+  status,
+  archivo,
+}) => {
+  const response = await patchJSON(
+    `${API_BASE}/items/${TABLES.documentos}/${documentoId}`,
+    {
+      status,
+      archivo,
+    },
+  )
+  return response?.data
 }
 
 const fetchTableCount = (table, options = {}) => {
@@ -340,7 +415,7 @@ const fetchManagerCustomerDetail = async (customerId) => {
   const personaIds = personas.map((persona) => persona.id).filter(Boolean)
   const vehiculoIds = vehiculos.map((vehiculo) => vehiculo.id).filter(Boolean)
   const documentoFields =
-    'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion'
+    'id,status,idProveedor,idPersona,idVehiculo,idParametro,fechaPresentacion,proximaFechaPresentacion,archivo'
   const buildDocumentoQuery = (field, ids, useNestedId = false) => {
     const query = new URLSearchParams({
       'sort[]': 'id',
@@ -822,4 +897,7 @@ export {
   createProviderRequiredDocuments,
   createPersona,
   createVehiculo,
+    uploadDirectusFile,
+  updateProviderDocumentFile,
+  updateProviderDocumentStatus,
 }

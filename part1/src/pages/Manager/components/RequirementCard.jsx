@@ -17,6 +17,7 @@ const RequirementCard = ({
   personasByProvider,
   vehiculosByProvider,
   onDocumentsCreated,
+  onDocumentsUpdated,
   getDisplayName,
   getDocumentoName,
   getPersonName,
@@ -170,6 +171,7 @@ const RequirementCard = ({
             documentosByVehiculo={documentosByVehiculo}           
             providerPersonas={personasByProvider[provider.id] || []}
             providerVehiculos={vehiculosByProvider[provider.id] || []}
+            onDocumentsUpdated={onDocumentsUpdated}
             getDisplayName={getDisplayName}
             getDocumentoName={getDocumentoName}
             getPersonName={getPersonName}

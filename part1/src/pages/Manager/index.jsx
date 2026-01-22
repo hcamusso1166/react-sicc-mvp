@@ -285,6 +285,7 @@ const ManagerPage = () => {
         personasByProvider={personasByProvider}
         vehiculosByProvider={vehiculosByProvider}
         onDocumentsCreated={reloadDetail}
+        onDocumentsUpdated={reloadDetail}
         getDisplayName={getDisplayName}
         getDocumentoName={getDocumentoName}
         getPersonName={getPersonName}

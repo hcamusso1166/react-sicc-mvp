@@ -2,11 +2,18 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
 import StatusPill from '../../../components/StatusPill'
+import {
+  updateProviderDocumentFile,
+  updateProviderDocumentStatus,
+  uploadDirectusFile,
+} from '../../../services/directus'
 
 const statusLabels = {
   toPresent: 'A Presentar',
   presented: 'Presentado',
   approved: 'Aprobado',
+  archived: 'Archivado',
+  finalized: 'Vencido',
   rejected: 'Rechazado',
 }
 
@@ -17,10 +24,12 @@ const getStatusLabel = (status) => {
 
 const getStatusClass = (status) => {
   if (!status) return 'manager-documents-status--unknown'
-  if (status === 'toPresent') return 'manager-documents-status--pending'
-  if (status === 'approved') return 'manager-documents-status--ok'
-  if (status === 'rejected') return 'manager-documents-status--danger'
-  if (status === 'presented') return 'manager-documents-status--info'
+  if (status === 'toPresent') return 'manager-documents-status--to-present'
+  if (status === 'presented') return 'manager-documents-status--presented'
+  if (status === 'approved') return 'manager-documents-status--approved'
+  if (status === 'archived') return 'manager-documents-status--archived'
+  if (status === 'finalized') return 'manager-documents-status--finalized'
+  if (status === 'rejected') return 'manager-documents-status--rejected'
   return 'manager-documents-status--unknown'
 }
 
@@ -36,10 +45,8 @@ const formatDate = (value) => {
   return date.toLocaleDateString('es-AR')
 }
 
-const documentActions = [
-  {
-    label: 'Cargar Archivo',
-    icon: (
+const ACTIONS = [
+  { key: 'upload', label: 'Cargar Archivo', icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M12 3v10m0 0 3.5-3.5M12 13 8.5 9.5M4 16.5v2.5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5"
@@ -50,41 +57,8 @@ const documentActions = [
           fill="none"
         />
       </svg>
-    ),
-  },
-  {
-    label: 'Aprobar',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M5 12.5l4.2 4.2L19 7"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: 'Editar',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M4 20h4l9-9a2.1 2.1 0 0 0-4-4l-9 9v4Z"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: 'Visualizar',
-    icon: (
+    )},
+  { key: 'view', label: 'Visualizar', icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M2.5 12s3.7-6 9.5-6 9.5 6 9.5 6-3.7 6-9.5 6-9.5-6-9.5-6Z"
@@ -103,11 +77,32 @@ const documentActions = [
           fill="none"
         />
       </svg>
-    ),
-  },
-  {
-    label: 'Borrar',
-    icon: (
+    ) },
+  { key: 'edit', label: 'Editar', icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4 20h4l9-9a2.1 2.1 0 0 0-4-4l-9 9v4Z"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
+    ) },
+  { key: 'approve', label: 'Aprobar', icon: (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M5 12.5l4.2 4.2L19 7"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
+    ) },
+  { key: 'delete', label: 'Borrar', icon: (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M6 7h12M9 7V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5V7m-7 0 1 12a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2l1-12"
@@ -118,9 +113,17 @@ const documentActions = [
           fill="none"
         />
       </svg>
-    ),
-  },
+    ) },
 ]
+
+const ACTIONS_BY_STATUS = {
+  toPresent: ['upload', 'delete'],
+  presented: ['view', 'edit', 'approve'],
+  approved: ['view'],
+  archived: [],
+  finalized: [],
+  rejected: ['view'],
+}
 
 const DocumentsSubcard = ({
   title,
@@ -129,6 +132,9 @@ const DocumentsSubcard = ({
   tableId,
   meta,
   emptyLabel = 'No hay documento para presentar.',
+  showActions = false,
+  onUploadDocument,
+  onDeleteDocument,
 }) => {
   const documentsCount = documents.length
   const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true)
@@ -223,7 +229,7 @@ const DocumentsSubcard = ({
                 <th>Fecha Pres.</th>
                 <th>Validez</th>
                 <th>Próxima</th>
-                <th className="manager-documents-actions-head">Acciones</th>
+                {showActions && <th>Acciones</th>}
               </tr>
             </thead>
             <tbody>
@@ -233,6 +239,8 @@ const DocumentsSubcard = ({
                   documento?.tipoDocumento?.validezDocumentoDias ??
                   null
                 const documentoName = getDocumentoName(documento)
+                const allowedActions =
+                  ACTIONS_BY_STATUS[documento?.status] || []
                 return (
                   <tr key={documento.id}>
                     <td>
@@ -252,21 +260,47 @@ const DocumentsSubcard = ({
                     <td>{formatDate(documento?.fechaPresentacion)}</td>
                     <td>{validez ?? '-'}</td>
                     <td>{formatDate(documento?.proximaFechaPresentacion)}</td>
-                                        <td>
-                      <div className="manager-documents-actions">
-                        {documentActions.map((action) => (
-                          <button
-                            key={`${documento.id}-${action.label}`}
-                            type="button"
-                            className="manager-documents-action-button"
-                            title={action.label}
-                            aria-label={action.label}
-                          >
-                            {action.icon}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
+                    {showActions && (
+                      <td>
+                        <div className="manager-documents-actions">
+                          {ACTIONS.map((action) => {
+                            if (!allowedActions.includes(action.key)) {
+                              return (
+                                <span
+                                  key={action.key}
+                                  className="manager-documents-action-placeholder"
+                                  aria-hidden="true"
+                                />
+                              )
+                            }
+
+                            const isUpload = action.key === 'upload'
+                            const isDelete = action.key === 'delete'
+                            const handler = isUpload
+                              ? () => onUploadDocument?.(documento)
+                              : isDelete
+                                ? () => onDeleteDocument?.(documento)
+                                : null
+                            const isDisabled = !handler
+                            return (
+                              <button
+                                key={action.key}
+                                type="button"
+                                className="manager-documents-action-button"
+                                onClick={handler || undefined}
+                                disabled={isDisabled}
+                                title={
+                                  isDisabled ? 'Próximamente' : action.label
+                                }
+                                aria-label={action.label}
+                              >
+                                <span aria-hidden="true">{action.icon}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 )
               })}
@@ -288,6 +322,7 @@ const ProviderCard = ({
   documentosByVehiculo,
   providerPersonas,
   providerVehiculos,
+  onDocumentsUpdated,
   getDisplayName,
   getDocumentoName,
   getPersonName,
@@ -295,7 +330,100 @@ const ProviderCard = ({
   getVehicleName,
   getVehiculoField,
 }) => {
-    return (
+  const [uploadTarget, setUploadTarget] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [uploadError, setUploadError] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const modalTitle = useMemo(() => {
+    const parts = [
+      getDisplayName(customer, 'Cliente'),
+      getDisplayName(site, 'Site'),
+      getDisplayName(requirement, 'Requerimiento'),
+      getDisplayName(provider, 'Proveedor'),
+    ]
+    return parts.filter(Boolean).join('-')
+  }, [customer, site, requirement, provider, getDisplayName])
+
+  const closeUploadModal = () => {
+    setUploadTarget(null)
+    setSelectedFile(null)
+    setUploadError('')
+    setIsUploading(false)
+  }
+
+  const openUploadModal = (documento) => {
+    setUploadTarget(documento)
+    setSelectedFile(null)
+    setUploadError('')
+  }
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0]
+    setSelectedFile(file || null)
+    setUploadError('')
+  }
+
+  const handleUploadSubmit = async (event) => {
+    event.preventDefault()
+    if (!uploadTarget) return
+    if (!selectedFile) {
+      setUploadError('Seleccioná un archivo PDF para continuar.')
+      return
+    }
+    if (selectedFile.type !== 'application/pdf') {
+      setUploadError('Solo se permiten archivos PDF.')
+      return
+    }
+
+    setIsUploading(true)
+    setUploadError('')
+    try {
+      const uploaded = await uploadDirectusFile(selectedFile)
+      const archivoId = uploaded?.data?.id
+      if (!archivoId) {
+        throw new Error('No se recibió el identificador del archivo.')
+      }
+      await updateProviderDocumentFile({
+        documentoId: uploadTarget.id,
+        archivoId,
+      })
+      closeUploadModal()
+      if (onDocumentsUpdated) {
+        await onDocumentsUpdated()
+      }
+    } catch (error) {
+      setUploadError(error.message)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDeleteDocument = async (documento) => {
+    const shouldDelete = window.confirm(
+      '¿Querés archivar este documento requerido?',
+    )
+    if (!shouldDelete) return
+    setIsDeleting(true)
+    setUploadError('')
+    try {
+      await updateProviderDocumentStatus({
+        documentoId: documento.id,
+        status: 'archived',
+        archivo: null,
+      })
+      if (onDocumentsUpdated) {
+        await onDocumentsUpdated()
+      }
+    } catch (error) {
+      setUploadError(error.message)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
     <div className="manager-provider-card">
       <div className="manager-provider-top">
         <div className="manager-provider-summary">
@@ -332,8 +460,11 @@ const ProviderCard = ({
           documents={providerDocuments}
           getDocumentoName={getDocumentoName}
           tableId={`provider-${provider?.id ?? 'unknown'}`}
+          showActions
+          onUploadDocument={openUploadModal}
+          onDeleteDocument={handleDeleteDocument}
         />
-<div className="manager-subcard manager-subcard-group">
+        <div className="manager-subcard manager-subcard-group">
           <div className="manager-subcard-header">
             <h5>Personas</h5>
             <span className="muted">
@@ -342,7 +473,7 @@ const ProviderCard = ({
                 : `${providerPersonas.length} registradas`}
             </span>
           </div>
-{providerPersonas.length === 0 && (
+          {providerPersonas.length === 0 && (
             <p className="muted">No hay personas registradas.</p>
           )}
           {providerPersonas.length > 0 && (
@@ -382,7 +513,7 @@ const ProviderCard = ({
                 : `${providerVehiculos.length} registrados`}
             </span>
           </div>
-{providerVehiculos.length === 0 && (
+          {providerVehiculos.length === 0 && (
             <p className="muted">No hay vehículos registrados.</p>
           )}
           {providerVehiculos.length > 0 && (
@@ -418,6 +549,64 @@ const ProviderCard = ({
           )}
         </div>
       </div>
+      {uploadTarget && (
+        <div className="manager-modal">
+          <div className="manager-modal__backdrop" onClick={closeUploadModal} />
+          <div className="manager-modal__content" role="dialog" aria-modal="true">
+            <div className="manager-modal__header">
+              <div>
+                <h4>{modalTitle}</h4>
+                <p className="muted">Cargar Documento para Proveedor</p>
+              </div>
+              <button
+                type="button"
+                className="manager-modal__close"
+                onClick={closeUploadModal}
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <form className="manager-modal__body" onSubmit={handleUploadSubmit}>
+              <label className="manager-modal__label" htmlFor="upload-document">
+                Seleccioná un archivo PDF
+              </label>
+              <input
+                id="upload-document"
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+              />
+              {selectedFile && (
+                <p className="muted">
+                  Archivo seleccionado: {selectedFile.name}
+                </p>
+              )}
+              {uploadError && (
+                <p className="manager-modal__error">{uploadError}</p>
+              )}
+              <div className="manager-modal__actions">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeUploadModal}
+                  disabled={isUploading}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" variant="primary" disabled={isUploading}>
+                  {isUploading ? 'Subiendo...' : 'Aceptar'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isDeleting && (
+        <p className="muted manager-documents-feedback">
+          Archivando documento...
+        </p>
+      )}
     </div>
   )
 }
