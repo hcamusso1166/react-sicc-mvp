@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
 import StatusPill from '../../../components/StatusPill'
 import {
+  getDirectusFileUploadUrl,
   updateProviderDocumentFile,
   updateProviderDocumentStatus,
   uploadDirectusFile,
@@ -335,6 +336,7 @@ const ProviderCard = ({
   const [uploadError, setUploadError] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const uploadEndpoint = useMemo(() => getDirectusFileUploadUrl(), [])
 
   const modalTitle = useMemo(() => {
     const parts = [
@@ -582,6 +584,9 @@ const ProviderCard = ({
                   Archivo seleccionado: {selectedFile.name}
                 </p>
               )}
+              <p className="muted">
+                URL para Postman: <code>{uploadEndpoint}</code>
+              </p>
               {uploadError && (
                 <p className="manager-modal__error">{uploadError}</p>
               )}

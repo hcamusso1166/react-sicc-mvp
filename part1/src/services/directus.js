@@ -1,17 +1,22 @@
-const API_BASE =
-  import.meta.env.VITE_DIRECTUS_URL ||
-  (import.meta.env.DEV ? '/directus' : 'https://tto.com.ar')
+const API_BASE = import.meta.env.VITE_DIRECTUS_URL || '/directus'
 
 const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
+const DIRECTUS_PUBLIC_URL =
+  import.meta.env.VITE_DIRECTUS_PUBLIC_URL ||
+  (API_BASE.startsWith('http') ? API_BASE : 'https://tto.com.ar')
+const TOKEN_STORAGE_KEYS = [
+  'directus_token',
+  'directusToken',
+  'directus_access_token',
+  'access_token',
+]
 
 const getStoredToken = () => {
   if (DIRECTUS_TOKEN) return DIRECTUS_TOKEN
   if (typeof window === 'undefined') return ''
-  return (
-    window.localStorage?.getItem('directus_token') ||
-    window.localStorage?.getItem('directusToken') ||
-    ''
-  )
+    const readToken = (storage) =>
+    TOKEN_STORAGE_KEYS.map((key) => storage?.getItem(key)).find(Boolean) || ''
+  return readToken(window.localStorage) || readToken(window.sessionStorage)
 }
 
 const getAuthHeaders = () => {
@@ -46,9 +51,23 @@ const NO_CACHE_HEADERS = {
   Expires: '0',
 }
 
+const getErrorMessage = async (response) => {
+  try {
+    const payload = await response.json()
+    return (
+      payload?.errors?.[0]?.message ||
+      payload?.message ||
+      `Request failed: ${response.status}`
+    )
+  } catch (error) {
+    return `Request failed: ${response.status}`
+  }
+}
+
 const fetchJSON = async (url, options = {}) => {
   const response = await fetch(url, {
     cache: 'no-store',
+    credentials: 'include',
     signal: options.signal,
     headers: {
       ...NO_CACHE_HEADERS,
@@ -57,7 +76,7 @@ const fetchJSON = async (url, options = {}) => {
     },
   })
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
+    throw new Error(await getErrorMessage(response))
   }
   return response.json()
 }
@@ -88,24 +107,7 @@ const getRelationId = (value) => {
 const postJSON = async (url, payload, options = {}) => {
   const response = await fetch(url, {
     method: 'POST',
-    signal: options.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      ...NO_CACHE_HEADERS,
-...getAuthHeaders(),
-      ...options.headers,
-    },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
-  }
-  return response.json()
-}
-
-const patchJSON = async (url, payload, options = {}) => {
-  const response = await fetch(url, {
-    method: 'PATCH',
+    credentials: 'include',
     signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
@@ -116,7 +118,26 @@ const patchJSON = async (url, payload, options = {}) => {
     body: JSON.stringify(payload),
   })
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
+    throw new Error(await getErrorMessage(response))
+  }
+  return response.json()
+}
+
+const patchJSON = async (url, payload, options = {}) => {
+  const response = await fetch(url, {
+    method: 'PATCH',
+    credentials: 'include',
+    signal: options.signal,
+    headers: {
+      'Content-Type': 'application/json',
+      ...NO_CACHE_HEADERS,
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response))
   }
   return response.json()
 }
@@ -126,6 +147,7 @@ const uploadDirectusFile = async (file, options = {}) => {
   formData.append('file', file)
   const response = await fetch(`${API_BASE}/files`, {
     method: 'POST',
+    credentials: 'include',
     signal: options.signal,
     headers: {
       ...NO_CACHE_HEADERS,
@@ -135,9 +157,14 @@ const uploadDirectusFile = async (file, options = {}) => {
     body: formData,
   })
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`)
+    throw new Error(await getErrorMessage(response))
   }
   return response.json()
+}
+
+const getDirectusFileUploadUrl = () => {
+  const baseUrl = DIRECTUS_PUBLIC_URL.replace(/\/$/, '')
+  return `${baseUrl}/files`
 }
 
 const updateProviderDocumentFile = async ({ documentoId, archivoId }) => {
@@ -882,6 +909,7 @@ const personaIds = allPersonas.map((persona) => persona.id).filter(Boolean)
 export {
   API_BASE,
   DIRECTUS_TOKEN,
+  DIRECTUS_PUBLIC_URL,
   DASHBOARD_TABLES,
   TABLES,
   fetchJSON,
@@ -897,7 +925,8 @@ export {
   createProviderRequiredDocuments,
   createPersona,
   createVehiculo,
-    uploadDirectusFile,
+  uploadDirectusFile,
+  getDirectusFileUploadUrl,
   updateProviderDocumentFile,
   updateProviderDocumentStatus,
 }

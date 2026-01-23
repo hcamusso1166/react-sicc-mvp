@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/directus/(.*)",
+      "destination": "https://tto.com.ar/$1"
+    }
+  ]
+}
