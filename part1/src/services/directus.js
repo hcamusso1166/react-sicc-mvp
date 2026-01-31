@@ -152,7 +152,8 @@ const patchJSON = async (url, payload, options = {}) => {
 const uploadDirectusFile = async (file, options = {}) => {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await fetch(withAccessToken(`${API_BASE}/files`), {
+  const uploadUrl = `${DIRECTUS_PUBLIC_URL.replace(/\/$/, '')}/files`
+  const response = await fetch(uploadUrl, {
     method: 'POST',
     credentials: 'include',
     signal: options.signal,
