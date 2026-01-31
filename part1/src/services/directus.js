@@ -159,7 +159,6 @@ const uploadDirectusFile = async (file, options = {}) => {
     signal: options.signal,
     headers: {
       ...NO_CACHE_HEADERS,
-      ...getAuthHeaders(),
       ...options.headers,
     },
     body: formData,
