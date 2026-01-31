@@ -87,6 +87,13 @@ const withCacheBust = (url, cacheBust) => {
   return `${url}${separator}cacheBust=${encodeURIComponent(cacheBust)}`
 }
 
+const withAccessToken = (url) => {
+  const token = getStoredToken()
+  if (!token) return url
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}access_token=${encodeURIComponent(token)}`
+}
+
 const safeFetchJSON = async (url, options) => {
   try {
     return await fetchJSON(url, options)
@@ -145,7 +152,7 @@ const patchJSON = async (url, payload, options = {}) => {
 const uploadDirectusFile = async (file, options = {}) => {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await fetch(`${API_BASE}/files`, {
+  const response = await fetch(withAccessToken(`${API_BASE}/files`), {
     method: 'POST',
     credentials: 'include',
     signal: options.signal,
