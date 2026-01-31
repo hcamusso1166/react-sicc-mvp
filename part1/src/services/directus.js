@@ -44,13 +44,13 @@ const TABLES = {
   tiposDocumentos: 'tiposDocumentos',
   vehiculos: 'vehiculo',
 }
-
+/*
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-cache, no-store, must-revalidate',
   Pragma: 'no-cache',
   Expires: '0',
 }
-
+*/
 const getErrorMessage = async (response) => {
   try {
     const payload = await response.json()
@@ -70,7 +70,7 @@ const fetchJSON = async (url, options = {}) => {
     credentials: 'include',
     signal: options.signal,
     headers: {
-      ...NO_CACHE_HEADERS,
+      //...NO_CACHE_HEADERS,
       ...getAuthHeaders(),
       ...options.headers,
     },
@@ -118,7 +118,7 @@ const postJSON = async (url, payload, options = {}) => {
     signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
-      ...NO_CACHE_HEADERS,
+      //...NO_CACHE_HEADERS,
       ...getAuthHeaders(),
       ...options.headers,
     },
@@ -137,7 +137,7 @@ const patchJSON = async (url, payload, options = {}) => {
     signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
-      ...NO_CACHE_HEADERS,
+      //...NO_CACHE_HEADERS,
       ...getAuthHeaders(),
       ...options.headers,
     },
@@ -158,7 +158,7 @@ const uploadDirectusFile = async (file, options = {}) => {
     credentials: 'include',
     signal: options.signal,
     headers: {
-      ...NO_CACHE_HEADERS,
+      //...NO_CACHE_HEADERS,
       ...options.headers,
     },
     body: formData,
