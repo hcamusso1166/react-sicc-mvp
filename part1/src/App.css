@@ -637,6 +637,30 @@ body {
   margin-bottom: 8px;
 }
 
+.manager-subcard-header--split {
+  justify-content: space-between;
+}
+
+.manager-subcard-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.manager-subcard-search input {
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: 220px;
+}
+
+.manager-subcard-search input::placeholder {
+  color: #94a3b8;
+}
+
 .manager-provider-documents ul,
 .manager-subcard ul {
   padding-left: 18px;
@@ -679,6 +703,37 @@ body {
 
 .manager-documents-table-wrapper {
   overflow-x: auto;
+}
+
+.manager-entity-table-wrapper {
+  overflow-x: auto;
+}
+
+.manager-entity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.manager-entity-table th,
+.manager-entity-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.manager-entity-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.manager-entity-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .manager-documents-table {

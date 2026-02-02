@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
 import StatusPill from '../../../components/StatusPill'
@@ -336,6 +336,10 @@ const ProviderCard = ({
   const [uploadError, setUploadError] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [personaSearch, setPersonaSearch] = useState('')
+  const [vehiculoSearch, setVehiculoSearch] = useState('')
+  const [expandedPersonas, setExpandedPersonas] = useState(() => new Set())
+  const [expandedVehiculos, setExpandedVehiculos] = useState(() => new Set())
   const uploadEndpoint = useMemo(() => getDirectusFileUploadUrl(), [])
 
   const modalTitle = useMemo(() => {
@@ -424,6 +428,70 @@ const ProviderCard = ({
       setIsDeleting(false)
     }
   }
+const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
+  const normalizedVehiculoSearch = vehiculoSearch.trim().toLowerCase()
+
+  const filteredPersonas = useMemo(() => {
+    if (!normalizedPersonaSearch) return providerPersonas
+    return providerPersonas.filter((persona) => {
+      const name = (getPersonName(persona) || '').toLowerCase()
+      const documento = (getPersonaDocumento(persona) || '').toLowerCase()
+      return (
+        name.includes(normalizedPersonaSearch) ||
+        documento.includes(normalizedPersonaSearch)
+      )
+    })
+  }, [
+    providerPersonas,
+    normalizedPersonaSearch,
+    getPersonName,
+    getPersonaDocumento,
+  ])
+
+  const filteredVehiculos = useMemo(() => {
+    if (!normalizedVehiculoSearch) return providerVehiculos
+    return providerVehiculos.filter((vehiculo) => {
+      const name = (getVehicleName(vehiculo) || '').toLowerCase()
+      const dominio = (getVehiculoField(vehiculo?.dominio) || '').toLowerCase()
+      const marca = (getVehiculoField(vehiculo?.marca) || '').toLowerCase()
+      const modelo = (getVehiculoField(vehiculo?.modelo) || '').toLowerCase()
+      return (
+        name.includes(normalizedVehiculoSearch) ||
+        dominio.includes(normalizedVehiculoSearch) ||
+        marca.includes(normalizedVehiculoSearch) ||
+        modelo.includes(normalizedVehiculoSearch)
+      )
+    })
+  }, [
+    providerVehiculos,
+    normalizedVehiculoSearch,
+    getVehicleName,
+    getVehiculoField,
+  ])
+
+  const togglePersonaDocuments = (personaId) => {
+    setExpandedPersonas((prev) => {
+      const next = new Set(prev)
+      if (next.has(personaId)) {
+        next.delete(personaId)
+      } else {
+        next.add(personaId)
+      }
+      return next
+    })
+  }
+
+  const toggleVehiculoDocuments = (vehiculoId) => {
+    setExpandedVehiculos((prev) => {
+      const next = new Set(prev)
+      if (next.has(vehiculoId)) {
+        next.delete(vehiculoId)
+      } else {
+        next.add(vehiculoId)
+      }
+      return next
+    })
+  }
 
   return (
     <div className="manager-provider-card">
@@ -467,86 +535,184 @@ const ProviderCard = ({
           onDeleteDocument={handleDeleteDocument}
         />
         <div className="manager-subcard manager-subcard-group">
-          <div className="manager-subcard-header">
-            <h5>Personas</h5>
-            <span className="muted">
-              {providerPersonas.length === 1
-                ? '1 registrada'
-                : `${providerPersonas.length} registradas`}
-            </span>
+                    <div className="manager-subcard-header manager-subcard-header--split">
+            <div className="manager-subcard-title">
+              <h5>Personas</h5>
+              <span className="muted">
+                {providerPersonas.length === 1
+                  ? '1 registrada'
+                  : `${providerPersonas.length} registradas`}
+              </span>
+            </div>
+            <div className="manager-subcard-search">
+              <input
+                type="search"
+                placeholder="Buscar personas o DNI"
+                value={personaSearch}
+                onChange={(event) => setPersonaSearch(event.target.value)}
+                aria-label="Buscar personas o DNI"
+              />
+            </div>
+
           </div>
-          {providerPersonas.length === 0 && (
+            {providerPersonas.length > 0 && filteredPersonas.length === 0 && (
+            <p className="muted">No hay personas que coincidan con el filtro.</p>
+          )}
+          {providerPersonas.length > 0 && filteredPersonas.length > 0 && (
             <p className="muted">No hay personas registradas.</p>
           )}
           {providerPersonas.length > 0 && (
             <div className="manager-subcard-group-content">
-              {providerPersonas.map((persona) => (
-                <div
-                  className="manager-subcard manager-subcard-item"
-                  key={`persona-${persona.id}`}
-                >
-                  <div className="manager-subcard-header">
-                    <h5>Persona</h5>
-                    <span className="muted">
-                      {getPersonName(persona)} · DNI:{' '}
-                      {getPersonaDocumento(persona)}
-                    </span>
-                    <span className="muted">
-                      Estado: {getEntityStatusLabel(persona?.status)}
-                    </span>
-                  </div>
-                  <DocumentsSubcard
-                    title="Documentos a Presentar"
-                    documents={documentosByPersona?.[persona.id] || []}
-                    getDocumentoName={getDocumentoName}
-                    tableId={`persona-${persona.id}`}
-                  />
+ <div className="manager-subcard manager-subcard-item">
+                <div className="manager-entity-table-wrapper">
+                  <table className="manager-entity-table">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPersonas.map((persona) => {
+                        const personaDocs =
+                          documentosByPersona?.[persona.id] || []
+                        const isExpanded = expandedPersonas.has(persona.id)
+                        return (
+                          <Fragment key={`persona-${persona.id}`}>
+                            <tr>
+                              <td>{getPersonName(persona)}</td>
+                              <td>{getPersonaDocumento(persona)}</td>
+                              <td>{getEntityStatusLabel(persona?.status)}</td>
+                              <td>
+                                <Button
+                                  variant="ghost"
+                                  size="small"
+                                  onClick={() => togglePersonaDocuments(persona.id)}
+                                  disabled={personaDocs.length === 0}
+                                >
+                                  {personaDocs.length === 0
+                                    ? 'Sin documentos'
+                                    : isExpanded
+                                      ? 'Ocultar documentos'
+                                      : 'Ver documentos'}
+                                </Button>
+                              </td>
+                            </tr>
+                            {isExpanded && personaDocs.length > 0 && (
+                              <tr>
+                                <td colSpan={4}>
+                                  <DocumentsSubcard
+                                    title={`Documentos de ${getPersonName(persona)}`}
+                                    documents={personaDocs}
+                                    getDocumentoName={getDocumentoName}
+                                    tableId={`persona-${persona.id}`}
+                                  />
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </div>
         <div className="manager-subcard manager-subcard-group">
-          <div className="manager-subcard-header">
-            <h5>Vehículos</h5>
-            <span className="muted">
-              {providerVehiculos.length === 1
-                ? '1 registrado'
-                : `${providerVehiculos.length} registrados`}
-            </span>
+ <div className="manager-subcard-header manager-subcard-header--split">
+            <div className="manager-subcard-title">
+              <h5>Vehículos</h5>
+              <span className="muted">
+                {providerVehiculos.length === 1
+                  ? '1 registrado'
+                  : `${providerVehiculos.length} registrados`}
+              </span>
+            </div>
+            <div className="manager-subcard-search">
+              <input
+                type="search"
+                placeholder="Buscar vehículos o dominio"
+                value={vehiculoSearch}
+                onChange={(event) => setVehiculoSearch(event.target.value)}
+                aria-label="Buscar vehículos o dominio"
+              />
+            </div>
           </div>
           {providerVehiculos.length === 0 && (
             <p className="muted">No hay vehículos registrados.</p>
           )}
-          {providerVehiculos.length > 0 && (
+          {providerVehiculos.length > 0 && filteredVehiculos.length === 0 && (
+            <p className="muted">
+              No hay vehículos que coincidan con el filtro.
+            </p>
+          )}
+          {providerVehiculos.length > 0 && filteredVehiculos.length > 0 && (
             <div className="manager-subcard-group-content">
-              {providerVehiculos.map((vehiculo) => (
-                <div
-                  className="manager-subcard manager-subcard-item"
-                  key={`vehiculo-${vehiculo.id}`}
-                >
-                  <div className="manager-subcard-header">
-                    <h5>Vehículo</h5>
-                    <span className="muted">
-                      {getVehicleName(vehiculo)} · Dominio:{' '}
-                      {getVehiculoField(vehiculo.dominio)}
-                    </span>
-                    <span className="muted">
-                      Marca: {getVehiculoField(vehiculo.marca)} · Modelo:{' '}
-                      {getVehiculoField(vehiculo.modelo)}
-                    </span>
-                    <span className="muted">
-                      Estado: {getEntityStatusLabel(vehiculo?.status)}
-                    </span>
-                  </div>
-                  <DocumentsSubcard
-                    title="Documentos a Presentar"
-                    documents={documentosByVehiculo?.[vehiculo.id] || []}
-                    getDocumentoName={getDocumentoName}
-                    tableId={`vehiculo-${vehiculo.id}`}
-                  />
+<div className="manager-subcard manager-subcard-item">
+                <div className="manager-entity-table-wrapper">
+                  <table className="manager-entity-table">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Dominio</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredVehiculos.map((vehiculo) => {
+                        const vehiculoDocs =
+                          documentosByVehiculo?.[vehiculo.id] || []
+                        const isExpanded = expandedVehiculos.has(vehiculo.id)
+                        return (
+                          <Fragment key={`vehiculo-${vehiculo.id}`}>
+                            <tr>
+                              <td>{getVehicleName(vehiculo)}</td>
+                              <td>{getVehiculoField(vehiculo.dominio)}</td>
+                              <td>{getEntityStatusLabel(vehiculo?.status)}</td>
+                              <td>
+                                <Button
+                                  variant="ghost"
+                                  size="small"
+                                  onClick={() =>
+                                    toggleVehiculoDocuments(vehiculo.id)
+                                  }
+                                  disabled={vehiculoDocs.length === 0}
+                                >
+                                  {vehiculoDocs.length === 0
+                                    ? 'Sin documentos'
+                                    : isExpanded
+                                      ? 'Ocultar documentos'
+                                      : 'Ver documentos'}
+                                </Button>
+                              </td>
+                            </tr>
+                            {isExpanded && vehiculoDocs.length > 0 && (
+                              <tr>
+                                <td colSpan={4}>
+                                  <DocumentsSubcard
+                                    title={`Documentos de ${getVehicleName(
+                                      vehiculo,
+                                    )}`}
+                                    documents={vehiculoDocs}
+                                    getDocumentoName={getDocumentoName}
+                                    tableId={`vehiculo-${vehiculo.id}`}
+                                  />
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
+
+            </div>
             </div>
           )}
         </div>
