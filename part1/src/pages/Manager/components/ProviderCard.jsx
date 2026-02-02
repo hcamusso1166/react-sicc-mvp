@@ -345,6 +345,8 @@ const ProviderCard = ({
   const [expandedPersonas, setExpandedPersonas] = useState(() => new Set())
   const [expandedVehiculos, setExpandedVehiculos] = useState(() => new Set())
   const uploadEndpoint = useMemo(() => getDirectusFileUploadUrl(), [])
+  const normalizeSearchValue = (value) =>
+    (value == null ? '' : String(value)).trim().toLowerCase()
 
   const modalTitle = useMemo(() => {
     const parts = [
@@ -432,14 +434,18 @@ const ProviderCard = ({
       setIsDeleting(false)
     }
   }
-  const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
-  const normalizedVehiculoSearch = vehiculoSearch.trim().toLowerCase()
+  const normalizedPersonaSearch = normalizeSearchValue(personaSearch)
+  const normalizedVehiculoSearch = normalizeSearchValue(vehiculoSearch)
 
   const filteredPersonas = useMemo(() => {
     if (!normalizedPersonaSearch) return providerPersonas
     return providerPersonas.filter((persona) => {
-      const name = (getPersonName(persona) || '').toLowerCase()
-      const documento = (getPersonaDocumento(persona) || '').toLowerCase()
+      const nameValue = getPersonName(persona)
+      const documentoValue = getPersonaDocumento(persona)
+      const name = nameValue ? nameValue.toString().toLowerCase() : ''
+      const documento = documentoValue
+        ? documentoValue.toString().toLowerCase()
+        : ''
       return (
         name.includes(normalizedPersonaSearch) ||
         documento.includes(normalizedPersonaSearch)
@@ -455,10 +461,10 @@ const ProviderCard = ({
   const filteredVehiculos = useMemo(() => {
     if (!normalizedVehiculoSearch) return providerVehiculos
     return providerVehiculos.filter((vehiculo) => {
-      const name = (getVehicleName(vehiculo) || '').toLowerCase()
-      const dominio = (getVehiculoField(vehiculo?.dominio) || '').toLowerCase()
-      const marca = (getVehiculoField(vehiculo?.marca) || '').toLowerCase()
-      const modelo = (getVehiculoField(vehiculo?.modelo) || '').toLowerCase()
+      const name = normalizeSearchValue(getVehicleName(vehiculo))
+      const dominio = normalizeSearchValue(getVehiculoField(vehiculo?.dominio))
+      const marca = normalizeSearchValue(getVehiculoField(vehiculo?.marca))
+      const modelo = normalizeSearchValue(getVehiculoField(vehiculo?.modelo))
       return (
         name.includes(normalizedVehiculoSearch) ||
         dominio.includes(normalizedVehiculoSearch) ||
