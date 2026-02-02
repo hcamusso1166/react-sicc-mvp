@@ -31,7 +31,7 @@ const SiteCard = ({
       </div>
       <Button
         as={Link}
-        to="/clientes/requerimiento/nuevo"
+        to="/clientes/site/requerimiento/nuevo"
         variant="primary"
         size="small"
         state={{ customer, site }}
