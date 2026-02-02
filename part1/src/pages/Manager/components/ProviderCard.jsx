@@ -334,6 +334,7 @@ const ProviderCard = ({
   getPersonaDocumento,
   getVehicleName,
   getVehiculoField,
+  showSummary = true,
 }) => {
   const [uploadTarget, setUploadTarget] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -505,36 +506,25 @@ const ProviderCard = ({
 
   return (
     <div className="manager-provider-card">
-      <div className="manager-provider-top">
-        <div className="manager-provider-summary">
-          <strong>{getDisplayName(provider)}</strong>
-          <span className="muted">CUIT: {provider.CUIT || '-'}</span>
-          <span className="muted">
-            Estado: {provider.status || 'Sin estado'}
-          </span>
+      {showSummary && (
+        <div className="manager-provider-top">
+          <div className="manager-provider-summary">
+            <strong>{getDisplayName(provider)}</strong>
+            <span className="muted">CUIT: {provider.CUIT || '-'}</span>
+            <span className="muted">
+              Estado: {provider.status || 'Sin estado'}
+            </span>
+          </div>
         </div>
-        <div className="manager-provider-actions">
-          <Button
-            as={Link}
-            to="/clientes/proveedor/persona/nuevo"
-            variant="primary"
-            size="small"
-            state={{ customer, site, requirement, provider }}
-          >
-            Crear Persona +
-          </Button>
-          <Button
-            as={Link}
-            to="/clientes/proveedor/vehiculo/nuevo"
-            variant="primary"
-            size="small"
-            state={{ customer, site, requirement, provider }}
-          >
-            Crear Vehículo +
-          </Button>
-        </div>
-      </div>
-      <div className="manager-provider-subcards">
+      )}
+      <div
+        className={[
+          'manager-provider-subcards',
+          showSummary ? null : 'manager-provider-subcards--flat',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         <DocumentsSubcard
           title="Documentos a Presentar"
           documents={providerDocuments}
@@ -545,7 +535,7 @@ const ProviderCard = ({
           onDeleteDocument={handleDeleteDocument}
         />
         <div className="manager-subcard manager-subcard-group">
-                    <div className="manager-subcard-header manager-subcard-header--split">
+          <div className="manager-subcard-header manager-subcard-header--split">
             <div className="manager-subcard-title">
               <h5>Personas</h5>
               <span className="muted">
@@ -553,24 +543,34 @@ const ProviderCard = ({
                   ? '1 registrada'
                   : `${providerPersonas.length} registradas`}
               </span>
+            </div>    
+            <div className="manager-subcard-tools">
+              <div className="manager-subcard-search">
+                <input
+                  type="search"
+                  placeholder="Buscar personas o DNI"
+                  value={personaSearch}
+                  onChange={(event) => setPersonaSearch(event.target.value)}
+                  aria-label="Buscar personas o DNI"
+                />
+              </div>
+              <Button
+                as={Link}
+                to="/clientes/proveedor/persona/nuevo"
+                variant="primary"
+                size="small"
+                state={{ customer, site, requirement, provider }}
+              >
+                Crear Persona +
+              </Button>
             </div>
-            <div className="manager-subcard-search">
-              <input
-                type="search"
-                placeholder="Buscar personas o DNI"
-                value={personaSearch}
-                onChange={(event) => setPersonaSearch(event.target.value)}
-                aria-label="Buscar personas o DNI"
-              />
-            </div>
-
           </div>
-            {providerPersonas.length > 0 && filteredPersonas.length === 0 && (
+          {providerPersonas.length > 0 && filteredPersonas.length === 0 && (
             <p className="muted">No hay personas que coincidan con el filtro.</p>
           )}
           {providerPersonas.length > 0 && (
             <div className="manager-subcard-group-content">
- <div className="manager-subcard manager-subcard-item">
+              <div className="manager-subcard manager-subcard-item">
                 <div className="manager-entity-table-wrapper">
                   <table className="manager-entity-table">
                     <thead>
@@ -596,7 +596,9 @@ const ProviderCard = ({
                                 <Button
                                   variant="ghost"
                                   size="small"
-                                  onClick={() => togglePersonaDocuments(persona.id)}
+                                  onClick={() =>
+                                    togglePersonaDocuments(persona.id)
+                                  }
                                   disabled={personaDocs.length === 0}
                                 >
                                   {personaDocs.length === 0
@@ -632,7 +634,7 @@ const ProviderCard = ({
           )}
         </div>
         <div className="manager-subcard manager-subcard-group">
- <div className="manager-subcard-header manager-subcard-header--split">
+          <div className="manager-subcard-header manager-subcard-header--split">
             <div className="manager-subcard-title">
               <h5>Vehículos</h5>
               <span className="muted">
@@ -641,14 +643,25 @@ const ProviderCard = ({
                   : `${providerVehiculos.length} registrados`}
               </span>
             </div>
-            <div className="manager-subcard-search">
-              <input
-                type="search"
-                placeholder="Buscar vehículos o dominio"
-                value={vehiculoSearch}
-                onChange={(event) => setVehiculoSearch(event.target.value)}
-                aria-label="Buscar vehículos o dominio"
-              />
+            <div className="manager-subcard-tools">
+              <div className="manager-subcard-search">
+                <input
+                  type="search"
+                  placeholder="Buscar vehículos o dominio"
+                  value={vehiculoSearch}
+                  onChange={(event) => setVehiculoSearch(event.target.value)}
+                  aria-label="Buscar vehículos o dominio"
+                />
+              </div>
+              <Button
+                as={Link}
+                to="/clientes/proveedor/vehiculo/nuevo"
+                variant="primary"
+                size="small"
+                state={{ customer, site, requirement, provider }}
+              >
+                Crear Vehículo +
+              </Button>           
             </div>
           </div>
           {providerVehiculos.length === 0 && (
@@ -661,7 +674,7 @@ const ProviderCard = ({
           )}
           {providerVehiculos.length > 0 && filteredVehiculos.length > 0 && (
             <div className="manager-subcard-group-content">
-<div className="manager-subcard manager-subcard-item">
+              <div className="manager-subcard manager-subcard-item">
                 <div className="manager-entity-table-wrapper">
                   <table className="manager-entity-table">
                     <thead>
@@ -682,7 +695,6 @@ const ProviderCard = ({
                         return (
                           <Fragment key={`vehiculo-${vehiculo.id}`}>
                             <tr>
-
                               <td>{getVehiculoField(vehiculo.dominio)}</td>
                               <td>{getVehiculoField(vehiculo?.marca)}</td>
                               <td>{getVehiculoField(vehiculo?.modelo)}</td>

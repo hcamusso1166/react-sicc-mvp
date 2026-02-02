@@ -642,6 +642,14 @@ body {
   gap: 16px;
 }
 
+.manager-subcard-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
 .manager-subcard-title {
   display: flex;
   align-items: center;
@@ -675,6 +683,10 @@ body {
   display: grid;
   gap: 12px;
   margin-left: 18px;
+}
+
+.manager-provider-subcards--flat {
+  margin-left: 0;
 }
 
 .manager-subcard {

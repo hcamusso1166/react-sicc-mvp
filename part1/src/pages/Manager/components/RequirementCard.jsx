@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../../components/Button'
 import { ErrorBanner, SuccessBanner } from '../../../components/Banner'
@@ -28,6 +28,7 @@ const RequirementCard = ({
   const [creatingDocs, setCreatingDocs] = useState(false)
   const [createError, setCreateError] = useState('')
   const [createResult, setCreateResult] = useState(null)
+  const [expandedProviders, setExpandedProviders] = useState(() => new Set())
 
   const providersWithoutDocs = useMemo(
     () =>
@@ -77,6 +78,18 @@ const RequirementCard = ({
     } finally {
       setCreatingDocs(false)
     }
+  }
+
+    const toggleProvider = (providerId) => {
+    setExpandedProviders((prev) => {
+      const next = new Set(prev)
+      if (next.has(providerId)) {
+        next.delete(providerId)
+      } else {
+        next.add(providerId)
+      }
+      return next
+    })
   }
 
   return (
@@ -154,32 +167,76 @@ const RequirementCard = ({
             </div>
           </PanelCard>
         )}
-        {providers.length === 0 && (
-          <p className="muted">
-            No hay proveedores asociados a este requerimiento.
-          </p>
+ {providers.length === 0 ? (
+          <p className="muted">No existen proveedores registrados.</p>
+        ) : (
+          <div className="manager-entity-table-wrapper">
+            <table className="manager-entity-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>CUIT</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {providers.map((provider) => {
+                  const isExpanded = expandedProviders.has(provider.id)
+                  return (
+                    <Fragment key={provider.id}>
+                      <tr>
+                        <td>{getDisplayName(provider, 'Proveedor')}</td>
+                        <td>{provider.CUIT || '-'}</td>
+                        <td>{provider.status || 'Sin estado'}</td>
+                        <td>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="small"
+                            onClick={() => toggleProvider(provider.id)}
+                          >
+                            {isExpanded ? 'Ocultar' : 'Ver'}
+                          </Button>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={4}>
+                            <ProviderCard
+                              provider={provider}
+                              customer={customer}
+                              site={site}
+                              requirement={requirement}
+                              providerDocuments={
+                                documentosByProvider[provider.id] || []
+                              }
+                              documentosByPersona={documentosByPersona}
+                              documentosByVehiculo={documentosByVehiculo}
+                              providerPersonas={personasByProvider[provider.id] || []}
+                              providerVehiculos={
+                                vehiculosByProvider[provider.id] || []
+                              }
+                              onDocumentsUpdated={onDocumentsUpdated}
+                              getDisplayName={getDisplayName}
+                              getDocumentoName={getDocumentoName}
+                              getPersonName={getPersonName}
+                              getPersonaDocumento={getPersonaDocumento}
+                              getVehicleName={getVehicleName}
+                              getVehiculoField={getVehiculoField}
+                              showSummary={false}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-        {providers.map((provider) => (
-          <ProviderCard
-            key={provider.id}
-            provider={provider}
-            customer={customer}
-            site={site}
-            requirement={requirement}
-            providerDocuments={documentosByProvider[provider.id] || []}
-            documentosByPersona={documentosByPersona}
-            documentosByVehiculo={documentosByVehiculo}           
-            providerPersonas={personasByProvider[provider.id] || []}
-            providerVehiculos={vehiculosByProvider[provider.id] || []}
-            onDocumentsUpdated={onDocumentsUpdated}
-            getDisplayName={getDisplayName}
-            getDocumentoName={getDocumentoName}
-            getPersonName={getPersonName}
-            getPersonaDocumento={getPersonaDocumento}
-            getVehicleName={getVehicleName}
-            getVehiculoField={getVehiculoField}
-          />
-        ))}
+
       </div>
     </div>
   )
