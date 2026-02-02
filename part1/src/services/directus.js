@@ -1,31 +1,10 @@
-const API_BASE = import.meta.env.VITE_DIRECTUS_URL || '/directus'
-
-const DIRECTUS_TOKEN = import.meta.env.VITE_DIRECTUS_TOKEN || ''
-const DIRECTUS_PUBLIC_URL =
-  import.meta.env.VITE_DIRECTUS_PUBLIC_URL ||
-  (API_BASE.startsWith('http') ? API_BASE : 'https://tto.com.ar')
-const TOKEN_STORAGE_KEYS = [
-  'directus_token',
-  'directusToken',
-  'directus_access_token',
-  'access_token',
-]
-
-const getStoredToken = () => {
-  if (DIRECTUS_TOKEN) return DIRECTUS_TOKEN
-  if (typeof window === 'undefined') return ''
-    const readToken = (storage) =>
-    TOKEN_STORAGE_KEYS.map((key) => storage?.getItem(key)).find(Boolean) || ''
-  return readToken(window.localStorage) || readToken(window.sessionStorage)
-}
-
-const getAuthHeaders = () => {
-  const token = getStoredToken()
-  if (!token) return {}
-  return {
-    Authorization: `Bearer ${token}`,
-  }
-}
+import {
+  API_BASE,
+  DIRECTUS_PUBLIC_URL,
+  getErrorMessage,
+  request,
+  requestJSON,
+} from './directusClient'
 
 const DASHBOARD_TABLES = {
   clientes: 'Clientes',
@@ -44,54 +23,14 @@ const TABLES = {
   tiposDocumentos: 'tiposDocumentos',
   vehiculos: 'vehiculo',
 }
-/*
-const NO_CACHE_HEADERS = {
-  'Cache-Control': 'no-cache, no-store, must-revalidate',
-  Pragma: 'no-cache',
-  Expires: '0',
-}
-*/
-const getErrorMessage = async (response) => {
-  try {
-    const payload = await response.json()
-    return (
-      payload?.errors?.[0]?.message ||
-      payload?.message ||
-      `Request failed: ${response.status}`
-    )
-  } catch (error) {
-    return `Request failed: ${response.status}`
-  }
-}
-
 const fetchJSON = async (url, options = {}) => {
-  const response = await fetch(url, {
-    cache: 'no-store',
-    credentials: 'include',
-    signal: options.signal,
-    headers: {
-      //...NO_CACHE_HEADERS,
-      ...getAuthHeaders(),
-      ...options.headers,
-    },
-  })
-  if (!response.ok) {
-    throw new Error(await getErrorMessage(response))
-  }
-  return response.json()
+  return requestJSON(url, { signal: options.signal, headers: options.headers })
 }
 
 const withCacheBust = (url, cacheBust) => {
   if (!cacheBust) return url
   const separator = url.includes('?') ? '&' : '?'
   return `${url}${separator}cacheBust=${encodeURIComponent(cacheBust)}`
-}
-
-const withAccessToken = (url) => {
-  const token = getStoredToken()
-  if (!token) return url
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}access_token=${encodeURIComponent(token)}`
 }
 
 const safeFetchJSON = async (url, options) => {
@@ -112,56 +51,33 @@ const getRelationId = (value) => {
   return value
 }
 const postJSON = async (url, payload, options = {}) => {
-  const response = await fetch(url, {
+  return requestJSON(url, {
     method: 'POST',
-    credentials: 'include',
+    body: payload,
     signal: options.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      //...NO_CACHE_HEADERS,
-      ...getAuthHeaders(),
-      ...options.headers,
-    },
-    body: JSON.stringify(payload),
+    headers: options.headers,
   })
-  if (!response.ok) {
-    throw new Error(await getErrorMessage(response))
-  }
-  return response.json()
 }
 
 const patchJSON = async (url, payload, options = {}) => {
-  const response = await fetch(url, {
+  return requestJSON(url, {
     method: 'PATCH',
-    credentials: 'include',
+    body: payload,
     signal: options.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      //...NO_CACHE_HEADERS,
-      ...getAuthHeaders(),
-      ...options.headers,
-    },
-    body: JSON.stringify(payload),
+    headers: options.headers,
   })
-  if (!response.ok) {
-    throw new Error(await getErrorMessage(response))
-  }
-  return response.json()
 }
 
 const uploadDirectusFile = async (file, options = {}) => {
   const formData = new FormData()
   formData.append('file', file)
   const uploadUrl = `${DIRECTUS_PUBLIC_URL.replace(/\/$/, '')}/files`
-  const response = await fetch(uploadUrl, {
+  const response = await request(uploadUrl, {
     method: 'POST',
-    credentials: 'include',
-    signal: options.signal,
-    headers: {
-      //...NO_CACHE_HEADERS,
-      ...options.headers,
-    },
     body: formData,
+    isFormData: true,
+    signal: options.signal,
+    headers: options.headers,
   })
   if (!response.ok) {
     throw new Error(await getErrorMessage(response))
@@ -915,7 +831,6 @@ const personaIds = allPersonas.map((persona) => persona.id).filter(Boolean)
 
 export {
   API_BASE,
-  DIRECTUS_TOKEN,
   DIRECTUS_PUBLIC_URL,
   DASHBOARD_TABLES,
   TABLES,

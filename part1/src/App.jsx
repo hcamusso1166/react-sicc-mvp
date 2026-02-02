@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
+
 import DashboardLayout from './components/Layout/DashboardLayout'
 import LoginPage from './pages/Login'
 import AppRoutes from './routes/AppRoutes'
+import ProtectedRoute from './routes/ProtectedRoute'
+import PublicRoute from './routes/PublicRoute'
+import { useAuth } from './auth/AuthContext'
 import { fetchCustomersPage, fetchDashboardData } from './services/directus'
 
 const MENU_ITEMS = [
@@ -30,7 +34,8 @@ const getStatusLabel = (value) => {
 
 const App = () => {
   const location = useLocation()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
   const [counts, setCounts] = useState({
     clientes: 0,
     sites: 0,
@@ -68,27 +73,30 @@ const App = () => {
     setDocumentos([])
   }, [])
 
-  const loadDashboardData = useCallback(async (signal) => {
-    setLoading(true)
-    setError('')
-    resetDashboardState()
-    try {
-      const {
-        counts: nextCounts,
-        statusData: nextStatusData,
-        documentos: nextDocumentos,
-      } = await fetchDashboardData({ colors, getStatusLabel, signal })
-      setCounts(nextCounts)
-      setStatusData(nextStatusData)
-      setDocumentos(nextDocumentos)
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        setError(err.message)
+    const loadDashboardData = useCallback(
+    async (signal) => {
+      setLoading(true)
+      setError('')
+      resetDashboardState()
+      try {
+        const {
+          counts: nextCounts,
+          statusData: nextStatusData,
+          documentos: nextDocumentos,
+        } = await fetchDashboardData({ colors, getStatusLabel, signal })
+        setCounts(nextCounts)
+        setStatusData(nextStatusData)
+        setDocumentos(nextDocumentos)
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError(err.message)
+        }
+      } finally {
+        setLoading(false)
       }
-    } finally {
-      setLoading(false)
-    }
- }, [colors, resetDashboardState])
+    },
+    [colors, resetDashboardState],
+  )
 
   const loadCustomers = useCallback(async (page, searchTerm = '', signal) => {
     setCustomersLoading(true)
@@ -111,75 +119,87 @@ const App = () => {
     } finally {
       setCustomersLoading(false)
     }
-    }, [])
+  }, [])
 
   useEffect(() => {
-    if (isLoggedIn && location.pathname === '/') {
+    if (isAuthenticated && location.pathname === '/') {
       const controller = new AbortController()
       loadDashboardData(controller.signal)
       return () => controller.abort()
     }
-      return undefined
-  }, [isLoggedIn, location.pathname, loadDashboardData])
+    return undefined
+  }, [isAuthenticated, location.pathname, loadDashboardData])
 
   useEffect(() => {
-    if (isLoggedIn && location.pathname === '/clientes') {
+    if (isAuthenticated && location.pathname === '/clientes') {
       const controller = new AbortController()
       loadCustomers(customersPage, customerSearch, controller.signal)
       return () => controller.abort()
     }
-      return undefined
+    return undefined
   }, [
-    isLoggedIn,
+    isAuthenticated,
     location.pathname,
     customersPage,
     customerSearch,
     loadCustomers,
   ])
 
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={() => setIsLoggedIn(true)} />
-  }
+  const handleSignOut = useCallback(() => {
+    logout()
+    setCustomersPage(1)
+    setCustomerSearch('')
+    resetDashboardState()
+    setCustomers([])
+    setCustomersTotal(0)
+    setCustomersError('')
+    setError('')
+    navigate('/login', { replace: true })
+  }, [logout, navigate, resetDashboardState])
 
   return (
-    <DashboardLayout
-      menuItems={MENU_ITEMS}
-      onSignOut={() => {
-        setIsLoggedIn(false)
-        setCustomersPage(1)
-        setCustomerSearch('')
-        resetDashboardState()
-        setCustomers([])
-        setCustomersTotal(0)
-        setCustomersError('')
-        setError('')
-      }}
-    >
-      <AppRoutes
-        counts={counts}
-        statusData={statusData}
-        documentos={documentos}
-        onRefresh={loadDashboardData}
-        loading={loading}
-        error={error}
-        onStatusLabel={getStatusLabel}
-        customerSearch={customerSearch}
-        onCustomerSearchChange={(value) => {
-          setCustomerSearch(value)
-          setCustomersPage(1)
-        }}
-        customersError={customersError}
-        customersLoading={customersLoading}
-        filteredCustomers={customers}
-        customersPage={customersPage}
-        totalCustomerPages={totalCustomerPages}
-        onCustomersPageChange={setCustomersPage}
-        onCustomersRefresh={() =>
-          loadCustomers(customersPage, customerSearch)
-        }
-        getStatusLabel={getStatusLabel}
-      />
-    </DashboardLayout>
+    <Routes>
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+      </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route
+          path="/*"
+          element={
+            <DashboardLayout
+              menuItems={MENU_ITEMS}
+              onSignOut={handleSignOut}
+              signOutLabel="Cerrar sesión"
+            >
+              <AppRoutes
+                counts={counts}
+                statusData={statusData}
+                documentos={documentos}
+                onRefresh={loadDashboardData}
+                loading={loading}
+                error={error}
+                onStatusLabel={getStatusLabel}
+                customerSearch={customerSearch}
+                onCustomerSearchChange={(value) => {
+                  setCustomerSearch(value)
+                  setCustomersPage(1)
+                }}
+                customersError={customersError}
+                customersLoading={customersLoading}
+                filteredCustomers={customers}
+                customersPage={customersPage}
+                totalCustomerPages={totalCustomerPages}
+                onCustomersPageChange={setCustomersPage}
+                onCustomersRefresh={() =>
+                  loadCustomers(customersPage, customerSearch)
+                }
+                getStatusLabel={getStatusLabel}
+              />
+            </DashboardLayout>
+          }
+        />
+      </Route>
+    </Routes>
   )
 }
 
