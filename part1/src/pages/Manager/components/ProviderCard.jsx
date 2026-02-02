@@ -134,21 +134,25 @@ const DocumentsSubcard = ({
   meta,
   emptyLabel = 'No hay documento para presentar.',
   showActions = false,
+  collapsible = true,
+  defaultCollapsed = true,
   onUploadDocument,
   onDeleteDocument,
 }) => {
   const documentsCount = documents.length
-  const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(true)
+  const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(
+    defaultCollapsed,
+  )
   const previousDocumentsCount = useRef(documentsCount)
 
   useEffect(() => {
     if (documentsCount === 0) {
       setIsDocumentsCollapsed(true)
     } else if (previousDocumentsCount.current === 0) {
-      setIsDocumentsCollapsed(true)
+      setIsDocumentsCollapsed(defaultCollapsed)
     }
     previousDocumentsCount.current = documentsCount
-  }, [documentsCount])
+  }, [documentsCount, defaultCollapsed])
 
   const sortedDocuments = useMemo(() => {
     const documentsCopy = [...documents]
@@ -199,7 +203,7 @@ const DocumentsSubcard = ({
       <div className="manager-subcard-header">
         <h5>{title}</h5>
         {meta && <span className="muted">{meta}</span>}
-        {documentsCount > 0 && (
+        {documentsCount > 0 && collapsible && (
           <Button
             variant="ghost"
             size="small"
@@ -212,14 +216,14 @@ const DocumentsSubcard = ({
         )}
       </div>
       {documentsCount === 0 && <p className="muted">{emptyLabel}</p>}
-      {documentsCount > 0 && isDocumentsCollapsed && (
+      {documentsCount > 0 && collapsible && isDocumentsCollapsed && (
         <p className="muted">
           {documentsCount === 1
             ? 'Hay 1 documento para presentar.'
             : `Hay ${documentsCount} documentos para presentar.`}
         </p>
       )}
-      {documentsCount > 0 && !isDocumentsCollapsed && (
+      {documentsCount > 0 && (!collapsible || !isDocumentsCollapsed) && (
         <div className="manager-documents-table-wrapper" id={documentsTableId}>
           <table className="manager-documents-table">
             <thead>
@@ -428,7 +432,7 @@ const ProviderCard = ({
       setIsDeleting(false)
     }
   }
-const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
+  const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
   const normalizedVehiculoSearch = vehiculoSearch.trim().toLowerCase()
 
   const filteredPersonas = useMemo(() => {
@@ -558,9 +562,6 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
             {providerPersonas.length > 0 && filteredPersonas.length === 0 && (
             <p className="muted">No hay personas que coincidan con el filtro.</p>
           )}
-          {providerPersonas.length > 0 && filteredPersonas.length > 0 && (
-            <p className="muted">No hay personas registradas.</p>
-          )}
           {providerPersonas.length > 0 && (
             <div className="manager-subcard-group-content">
  <div className="manager-subcard manager-subcard-item">
@@ -608,6 +609,8 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
                                     documents={personaDocs}
                                     getDocumentoName={getDocumentoName}
                                     tableId={`persona-${persona.id}`}
+                                    collapsible={false}
+                                    defaultCollapsed={false}
                                   />
                                 </td>
                               </tr>
@@ -657,8 +660,10 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
                   <table className="manager-entity-table">
                     <thead>
                       <tr>
-                        <th>Nombre</th>
                         <th>Dominio</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Color</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                       </tr>
@@ -671,8 +676,11 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
                         return (
                           <Fragment key={`vehiculo-${vehiculo.id}`}>
                             <tr>
-                              <td>{getVehicleName(vehiculo)}</td>
+
                               <td>{getVehiculoField(vehiculo.dominio)}</td>
+                              <td>{getVehiculoField(vehiculo?.marca)}</td>
+                              <td>{getVehiculoField(vehiculo?.modelo)}</td>
+                              <td>{getVehiculoField(vehiculo?.color)}</td>
                               <td>{getEntityStatusLabel(vehiculo?.status)}</td>
                               <td>
                                 <Button
@@ -693,7 +701,7 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
                             </tr>
                             {isExpanded && vehiculoDocs.length > 0 && (
                               <tr>
-                                <td colSpan={4}>
+                                <td colSpan={6}>
                                   <DocumentsSubcard
                                     title={`Documentos de ${getVehicleName(
                                       vehiculo,
@@ -701,6 +709,8 @@ const normalizedPersonaSearch = personaSearch.trim().toLowerCase()
                                     documents={vehiculoDocs}
                                     getDocumentoName={getDocumentoName}
                                     tableId={`vehiculo-${vehiculo.id}`}
+                                    collapsible={false}
+                                    defaultCollapsed={false}
                                   />
                                 </td>
                               </tr>

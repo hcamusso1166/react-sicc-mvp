@@ -638,7 +638,8 @@ body {
 }
 
 .manager-subcard-header--split {
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 16px;
 }
 
 .manager-subcard-title {
