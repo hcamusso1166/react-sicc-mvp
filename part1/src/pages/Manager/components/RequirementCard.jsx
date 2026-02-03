@@ -94,30 +94,29 @@ const RequirementCard = ({
 
   return (
     <div className="manager-requirement-card">
-      <div className="manager-requirement-actions">
-        <Button
-          type="button"
-          variant="ghost"
-          size="small"
-          onClick={handleCreateDocuments}
-          disabled={creatingDocs || providers.length === 0}
-        >
-          {creatingDocs ? 'Creando...' : 'Crear Documentos Requeridos'}
-        </Button>     
-        <Button
-          as={Link}
-          to="/clientes/proveedor/nuevo"
-          variant="primary"
-          size="small"
-          state={{ customer, site, requirement }}
-        >
-          Crear Proveedor +
-        </Button>
-      </div>
       <div className="manager-provider-section">
         <div className="manager-provider-header">
           <span>Proveedores</span>
-          
+          <div className="manager-provider-header-actions">
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              onClick={handleCreateDocuments}
+              disabled={creatingDocs || providers.length === 0}
+            >
+              {creatingDocs ? 'Creando...' : 'Crear Documentos Requeridos'}
+            </Button>
+            <Button
+              as={Link}
+              to="/clientes/proveedor/nuevo"
+              variant="primary"
+              size="small"
+              state={{ customer, site, requirement }}
+            >
+              Crear Proveedor +
+            </Button>
+          </div>
         </div>
         {createError && (
           <PanelCard className="manager-provider-message">
