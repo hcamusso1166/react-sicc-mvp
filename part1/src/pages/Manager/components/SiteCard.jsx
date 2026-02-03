@@ -52,17 +52,20 @@ const SiteCard = ({
             Estado: {site.status || 'Sin estado'}
           </span>
         </div>
-        <Button
-          as={Link}
-          to="/clientes/site/requerimiento/nuevo"
-          variant="primary"
-          size="small"
-          state={{ customer, site }}
-        >
-          Crear Requerimiento +
-        </Button>
       </div>
       <div className="manager-tree-body">
+        <div className="manager-tree-subheader">
+          <h4>Requerimientos</h4>
+          <Button
+            as={Link}
+            to="/clientes/site/requerimiento/nuevo"
+            variant="primary"
+            size="small"
+            state={{ customer, site }}
+          >
+            Crear Requerimiento +
+          </Button>
+        </div>
         {requirements.length === 0 ? (
           <p className="muted">No hay requerimientos registrados para este site.</p>
         ) : (
