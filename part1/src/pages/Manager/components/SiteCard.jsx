@@ -86,7 +86,13 @@ const SiteCard = ({
                   return (
                     <Fragment key={requirement.id}>
                       <tr>
-                        <td>{getDisplayName(requirement, 'Requerimiento')}</td>
+                        <td>
+                          <span
+                            className={`manager-entity-name${isExpanded ? ' manager-entity-name--expanded' : ''}`}
+                          >
+                            {getDisplayName(requirement, 'Requerimiento')}
+                          </span>
+                        </td>
                         <td>{formatDate(requirement.fechaInicio)}</td>
                         <td>{formatDate(requirement.fechaProyectadaFin)}</td>
                         <td>{requirement.status || 'Sin estado'}</td>
