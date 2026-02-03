@@ -65,7 +65,7 @@ const SiteCard = ({
           >
             Crear Requerimiento +
           </Button>
-        </div>
+        </div> 
         {requirements.length === 0 ? (
           <p className="muted">No hay requerimientos registrados para este site.</p>
         ) : (

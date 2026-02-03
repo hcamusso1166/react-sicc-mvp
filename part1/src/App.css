@@ -575,6 +575,17 @@ body {
   margin: 0;
 }
 
+.manager-tree-subheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.manager-tree-subheader h4 {
+  margin: 0;
+}
+
 .manager-requirement-card {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
