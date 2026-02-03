@@ -595,6 +595,13 @@ body {
   gap: 12px;
 }
 
+.manager-requirement-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 .manager-provider-section {
   border-left: 3px solid #dbeafe;
   padding-left: 16px;

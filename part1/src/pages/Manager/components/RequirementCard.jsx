@@ -80,7 +80,7 @@ const RequirementCard = ({
     }
   }
 
-    const toggleProvider = (providerId) => {
+  const toggleProvider = (providerId) => {
     setExpandedProviders((prev) => {
       const next = new Set(prev)
       if (next.has(providerId)) {
@@ -94,13 +94,16 @@ const RequirementCard = ({
 
   return (
     <div className="manager-requirement-card">
-      <div className="manager-tree-header">
-        <div className="manager-tree-title">
-          <h4>Requerimiento: {getDisplayName(requirement)}</h4>
-          <span className="muted">
-            Estado: {requirement.status || 'Sin estado'}
-          </span>
-        </div>
+      <div className="manager-requirement-actions">
+        <Button
+          type="button"
+          variant="ghost"
+          size="small"
+          onClick={handleCreateDocuments}
+          disabled={creatingDocs || providers.length === 0}
+        >
+          {creatingDocs ? 'Creando...' : 'Crear Documentos Requeridos'}
+        </Button>     
         <Button
           as={Link}
           to="/clientes/proveedor/nuevo"
@@ -114,15 +117,7 @@ const RequirementCard = ({
       <div className="manager-provider-section">
         <div className="manager-provider-header">
           <span>Proveedores</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="small"
-            onClick={handleCreateDocuments}
-            disabled={creatingDocs || providers.length === 0}
-          >
-            {creatingDocs ? 'Creando...' : 'Crear Documentos Requeridos'}
-          </Button>
+          
         </div>
         {createError && (
           <PanelCard className="manager-provider-message">
@@ -167,7 +162,7 @@ const RequirementCard = ({
             </div>
           </PanelCard>
         )}
- {providers.length === 0 ? (
+        {providers.length === 0 ? (
           <p className="muted">No existen proveedores registrados.</p>
         ) : (
           <div className="manager-entity-table-wrapper">
