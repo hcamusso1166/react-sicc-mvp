@@ -91,6 +91,7 @@ const ManagerPage = () => {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
   const [detail, setDetail] = useState(null)
+  const [siteSearch, setSiteSearch] = useState('')
 
   const filteredCustomers = useMemo(() => {
     const normalizedSearch = normalizeValue(customerSearch)
@@ -237,6 +238,13 @@ const ManagerPage = () => {
 
   const customer = detail?.customer
   const sites = detail?.sites ?? []
+  const filteredSites = useMemo(() => {
+    const normalizedSearch = normalizeValue(siteSearch)
+    if (!normalizedSearch) return sites
+    return sites.filter((site) =>
+      normalizeValue(getDisplayName(site, '')).includes(normalizedSearch),
+    )
+  }, [sites, siteSearch])
 
   return (
     <section className="manager-view">
@@ -269,6 +277,16 @@ const ManagerPage = () => {
           </>
         }
       />
+            <div className="manager-sites-header">
+        <h3>Sites</h3>
+        <SearchBar
+          value={siteSearch}
+          placeholder="Buscar sites..."
+          onChange={(value) => setSiteSearch(value)}
+          className="manager-sites-search"
+          aria-label="Buscar sites"
+        />
+      </div>
       {detailError && (
         <ErrorBanner>No se pudo cargar el detalle. {detailError}</ErrorBanner>
       )}
@@ -278,9 +296,14 @@ const ManagerPage = () => {
           <p className="muted">Este cliente no tiene sites registrados.</p>
         </PanelCard>
       )}
+            {!detailLoading && sites.length > 0 && filteredSites.length === 0 && (
+        <PanelCard>
+          <p className="muted">No hay sites que coincidan con el filtro.</p>
+        </PanelCard>
+      )}
       <ManagerTree
         customer={customer}
-        sites={sites}
+        sites={filteredSites}
         requirementsBySite={requirementsBySite}
         providersByRequirement={providersByRequirement}
         documentosByProvider={documentosByProvider}
