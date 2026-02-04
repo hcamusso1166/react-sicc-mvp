@@ -494,9 +494,10 @@ body {
 
 .manager-title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   margin: 0;
+  flex-wrap: nowrap;
 }
 
 .manager-title-row h2 {
@@ -505,6 +506,11 @@ body {
 
 .manager-title-subtitle {
   font-size: 13px;
+  white-space: nowrap;
+}
+
+.manager-title-row .manager-search {
+  max-width: 360px;
 }
 
 .manager-list {
