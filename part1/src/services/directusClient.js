@@ -5,10 +5,16 @@ import {
   setStoredAuth,
 } from '../auth/authStorage'
 
-const API_BASE = (import.meta.env.VITE_DIRECTUS_URL || 'https://tto.com.ar').replace(
-  /\/$/,
-  '',
-)
+const resolveDefaultApiBase = () => {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/directus`
+  }
+  return 'https://tto.com.ar'
+}
+
+const API_BASE = (
+  import.meta.env.VITE_DIRECTUS_URL || resolveDefaultApiBase()
+).replace(/\/$/, '')
 const DIRECTUS_PUBLIC_URL = (
   import.meta.env.VITE_DIRECTUS_PUBLIC_URL || API_BASE
 ).replace(/\/$/, '')
