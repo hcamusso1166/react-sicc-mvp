@@ -124,7 +124,6 @@ const getAuthorizationSummary = (documents = []) => {
 
 const PortadaPage = () => {
   const [customers, setCustomers] = useState([])
-  const [customerSearch, setCustomerSearch] = useState('')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [selectedSiteId, setSelectedSiteId] = useState('')
   const [personSearch, setPersonSearch] = useState('')
@@ -134,14 +133,6 @@ const PortadaPage = () => {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
   const [detail, setDetail] = useState(null)
-
-  const filteredCustomers = useMemo(() => {
-    const normalizedSearch = normalizeValue(customerSearch)
-    if (!normalizedSearch) return customers
-    return customers.filter((customer) =>
-      normalizeValue(customer.name || '').includes(normalizedSearch),
-    )
-  }, [customerSearch, customers])
 
   useEffect(() => {
     let isMounted = true
@@ -170,6 +161,12 @@ const PortadaPage = () => {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    if (!selectedCustomerId && customers.length) {
+      setSelectedCustomerId(customers[0].id)
+    }
+  }, [customers, selectedCustomerId])
 
   const reloadDetail = useCallback(async () => {
     if (!selectedCustomerId) {
@@ -278,14 +275,6 @@ const PortadaPage = () => {
     })
   }, [normalizedVehicleSearch, vehiculosForSite])
 
-  const handleCustomerChange = (event) => {
-    const nextCustomerId = event.target.value
-    setSelectedCustomerId(nextCustomerId)
-    setSelectedSiteId('')
-    setPersonSearch('')
-    setVehicleSearch('')
-  }
-
   const handleSiteChange = (event) => {
     setSelectedSiteId(event.target.value)
     setPersonSearch('')
@@ -297,8 +286,15 @@ const PortadaPage = () => {
   return (
     <section className="portada-view">
       <PageHeader
-        title="Portada"
-        subtitle="Consulta rápida de personas y vehículos autorizados por cliente y establecimiento."
+        title={
+          <div className="portada-title">
+            <h2>Portada</h2>
+            <span className="muted">
+              Consulta rápida de personas y vehículos autorizados por Cliente y
+              Site.
+            </span>
+          </div>
+        }
       />
 
       {customersError ? <ErrorBanner message={customersError} /> : null}
@@ -312,44 +308,18 @@ const PortadaPage = () => {
           ) : null}
         </div>
         <FormGrid className="portada-filter-grid">
-          <FormField label="Buscar cliente">
-            <SearchBar
-              value={customerSearch}
-              onChange={setCustomerSearch}
-              placeholder="Buscar cliente..."
-              showIcon
-            />
-          </FormField>
-          <FormField label="Cliente">
-            <SelectInput
-              value={selectedCustomerId}
-              onChange={handleCustomerChange}
-              disabled={loadingCustomers}
-            >
-              <option value="">
-                {loadingCustomers
-                  ? 'Cargando clientes...'
-                  : 'Selecciona un cliente'}
-              </option>
-              {filteredCustomers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </SelectInput>
-          </FormField>
-          <FormField label="Establecimiento">
+           <FormField label="Site">         
             <SelectInput
               value={selectedSiteId}
               onChange={handleSiteChange}
-              disabled={!selectedCustomerId || detailLoading}
+              disabled={!selectedCustomerId || detailLoading || loadingCustomers}
             >
               <option value="">
                 {selectedCustomerId
                   ? detailLoading
                     ? 'Cargando sites...'
-                    : 'Selecciona un establecimiento'
-                  : 'Selecciona un cliente primero'}
+                    : 'Selecciona un site'
+                  : 'Cargando cliente...'}
               </option>
               {sites.map((site) => (
                 <option key={site.id} value={site.id}>
@@ -379,17 +349,14 @@ const PortadaPage = () => {
 
       <div className="portada-results">
         <PanelCard className="portada-panel">
-          <div className="panel-header">
-            <div>
-              <h3>Personas</h3>
-              <p className="muted">Buscar por nombre o DNI.</p>
-            </div>
+          <div className="panel-header portada-panel-header">
+            <h3>Personas</h3>
+            <p className="muted">Buscar por nombre o DNI.</p>          
           </div>
           <SearchBar
             value={personSearch}
             onChange={setPersonSearch}
             placeholder="Buscar persona..."
-            showIcon
             disabled={!selectionReady}
           />
           {!selectionReady ? (
@@ -433,17 +400,14 @@ const PortadaPage = () => {
         </PanelCard>
 
         <PanelCard className="portada-panel">
-          <div className="panel-header">
-            <div>
-              <h3>Vehículos</h3>
-              <p className="muted">Buscar por dominio, marca o modelo.</p>
-            </div>
+          <div className="panel-header portada-panel-header">
+            <h3>Vehículos</h3>
+            <p className="muted">Buscar por dominio, marca o modelo.</p>
           </div>
           <SearchBar
             value={vehicleSearch}
             onChange={setVehicleSearch}
             placeholder="Buscar vehículo..."
-            showIcon
             disabled={!selectionReady}
           />
           {!selectionReady ? (

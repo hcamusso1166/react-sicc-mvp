@@ -1212,6 +1212,28 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.portada-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.portada-title h2 {
+  margin: 0;
+}
+
+.portada-panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.portada-panel-header p {
+  margin: 0;
+}
+
 .portada-summary {
   display: grid;
   gap: 12px;
