@@ -589,7 +589,13 @@ const ProviderCard = ({
                         return (
                           <Fragment key={`persona-${persona.id}`}>
                             <tr>
-                              <td>{getPersonName(persona)}</td>
+                              <td>
+                                <span
+                                  className={`manager-entity-name${isExpanded ? ' manager-entity-name--expanded' : ''}`}
+                                >
+                                  {getPersonName(persona)}
+                                </span>
+                              </td>
                               <td>{getPersonaDocumento(persona)}</td>
                               <td>{getEntityStatusLabel(persona?.status)}</td>
                               <td>
@@ -695,7 +701,13 @@ const ProviderCard = ({
                         return (
                           <Fragment key={`vehiculo-${vehiculo.id}`}>
                             <tr>
-                              <td>{getVehiculoField(vehiculo.dominio)}</td>
+                              <td>
+                                <span
+                                  className={`manager-entity-name${isExpanded ? ' manager-entity-name--expanded' : ''}`}
+                                >
+                                  {getVehiculoField(vehiculo.dominio)}
+                                </span>
+                              </td>
                               <td>{getVehiculoField(vehiculo?.marca)}</td>
                               <td>{getVehiculoField(vehiculo?.modelo)}</td>
                               <td>{getVehiculoField(vehiculo?.color)}</td>

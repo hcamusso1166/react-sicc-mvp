@@ -241,12 +241,16 @@ const ManagerPage = () => {
   return (
     <section className="manager-view">
       <PageHeader
-        title={`Cliente: ${customer?.name || 'Sin nombre'}`}
-        subtitle={
-          <span className="manager-inline-meta">
-            <span>CUIT: {customer?.CUIT || '-'}</span>
-            <span>Estado: {customer?.status || 'Sin estado'}</span>
-          </span>
+        title={
+          <h2 className="manager-customer-heading">
+            <strong className="manager-customer-name">
+              {customer?.name || 'Sin nombre'}
+            </strong>
+            <span className="manager-inline-meta">
+              <span>CUIT: {customer?.CUIT || '-'}</span>
+              <span>Estado: {customer?.status || 'Sin estado'}</span>
+            </span>
+          </h2>        
         }
         actionsClassName="manager-header-actions"
         actions={

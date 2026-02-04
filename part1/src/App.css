@@ -521,6 +521,19 @@ body {
   align-items: center;
 }
 
+.manager-customer-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: baseline;
+  font-weight: 400;
+  margin: 0;
+}
+
+.manager-customer-name {
+  font-weight: 700;
+}
+
 .manager-inline-meta {
   display: inline-flex;
   gap: 12px;

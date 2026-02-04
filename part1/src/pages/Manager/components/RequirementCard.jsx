@@ -180,7 +180,13 @@ const RequirementCard = ({
                   return (
                     <Fragment key={provider.id}>
                       <tr>
-                        <td>{getDisplayName(provider, 'Proveedor')}</td>
+                        <td>
+                          <span
+                            className={`manager-entity-name${isExpanded ? ' manager-entity-name--expanded' : ''}`}
+                          >
+                            {getDisplayName(provider, 'Proveedor')}
+                          </span>
+                        </td>
                         <td>{provider.CUIT || '-'}</td>
                         <td>{provider.status || 'Sin estado'}</td>
                         <td>
