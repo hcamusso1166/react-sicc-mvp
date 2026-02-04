@@ -45,14 +45,6 @@ const SiteCard = ({
 
   return (
     <div className="manager-tree-card">
-      <div className="manager-tree-header">
-        <div className="manager-tree-title">
-          <h3>Site: {getDisplayName(site)}</h3>
-          <span className="muted">
-            Estado: {site.status || 'Sin estado'}
-          </span>
-        </div>
-      </div>
       <div className="manager-tree-body">
         <div className="manager-tree-subheader">
           <h4>Requerimientos</h4>
@@ -65,7 +57,7 @@ const SiteCard = ({
           >
             Crear Requerimiento +
           </Button>
-        </div> 
+        </div>
         {requirements.length === 0 ? (
           <p className="muted">No hay requerimientos registrados para este site.</p>
         ) : (
