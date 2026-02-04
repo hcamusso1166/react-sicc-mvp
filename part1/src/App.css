@@ -519,6 +519,8 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .manager-customer-heading {
@@ -539,13 +541,21 @@ body {
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
+  font-size: 12px;
 }
 
 .manager-sites-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.manager-sites-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
 }
 
@@ -555,7 +565,7 @@ body {
 
 .manager-sites-search {
   width: 100%;
-  max-width: 360px;
+  max-width: 320px;
 }
 
 .manager-sites-search input {
@@ -585,6 +595,12 @@ body {
   align-items: baseline;
 }
 
+.manager-tree-actions {
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .manager-tree-header {
   display: flex;
   justify-content: space-between;
@@ -600,7 +616,7 @@ body {
 
 .manager-tree-subheader {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
 }
@@ -611,7 +627,7 @@ body {
 
 .manager-tree-subheader {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
 }
@@ -640,10 +656,17 @@ body {
 
 .manager-provider-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
   font-weight: 600;
+}
+
+.manager-provider-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .manager-provider-header-actions {
@@ -651,6 +674,8 @@ body {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .manager-provider-card {
@@ -701,12 +726,16 @@ body {
   margin-bottom: 8px;
 }
 
+.manager-subcard-header > button {
+  margin-left: auto;
+}
+
 .manager-subcard-header--split {
   justify-content: flex-start;
   gap: 16px;
 }
 
-.manager-subcard-tools {
+.manager-subcard-actions {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -802,6 +831,11 @@ body {
   border-bottom: 1px solid #e2e8f0;
 }
 
+.manager-entity-table th:last-child,
+.manager-entity-table td:last-child {
+  text-align: right;
+}
+
 .manager-entity-table th {
   font-size: 11px;
   text-transform: uppercase;
@@ -828,6 +862,11 @@ body {
   padding: 8px 10px;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
+}
+
+.manager-documents-table th:last-child,
+.manager-documents-table td:last-child {
+  text-align: right;
 }
 
 .manager-documents-table th {

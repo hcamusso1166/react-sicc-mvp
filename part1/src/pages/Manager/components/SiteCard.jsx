@@ -30,6 +30,7 @@ const SiteCard = ({
   getVehiculoField,
 }) => {
   const [expandedRequirements, setExpandedRequirements] = useState(new Set())
+  const [requirementSearch, setRequirementSearch] = useState('')
 
   const toggleRequirement = (requirementId) => {
     setExpandedRequirements((prev) => {
@@ -43,23 +44,51 @@ const SiteCard = ({
     })
   }
 
+    const normalizedRequirementSearch = requirementSearch.trim().toLowerCase()
+  const filteredRequirements = requirements.filter((requirement) => {
+    if (!normalizedRequirementSearch) return true
+    const name = getDisplayName(requirement, 'Requerimiento')
+      .toString()
+      .toLowerCase()
+    const status = (requirement.status || '').toString().toLowerCase()
+    return (
+      name.includes(normalizedRequirementSearch) ||
+      status.includes(normalizedRequirementSearch)
+    )
+  })
+
   return (
     <div className="manager-tree-card">
       <div className="manager-tree-body">
         <div className="manager-tree-subheader">
-          <h4>Requerimientos</h4>
-          <Button
-            as={Link}
-            to="/clientes/site/requerimiento/nuevo"
-            variant="primary"
-            size="small"
-            state={{ customer, site }}
-          >
-            Crear Requerimiento +
-          </Button>
+          <div className="manager-tree-title">
+            <h4>Requerimientos</h4>
+            <div className="manager-subcard-search">
+              <input
+                type="search"
+                placeholder="Buscar requerimientos"
+                value={requirementSearch}
+                onChange={(event) => setRequirementSearch(event.target.value)}
+                aria-label="Buscar requerimientos"
+              />
+            </div>
+          </div>
+          <div className="manager-tree-actions">
+            <Button
+              as={Link}
+              to="/clientes/site/requerimiento/nuevo"
+              variant="primary"
+              size="small"
+              state={{ customer, site }}
+            >
+              Crear Requerimiento +
+            </Button>
+          </div>          
         </div>
         {requirements.length === 0 ? (
           <p className="muted">No hay requerimientos registrados para este site.</p>
+        ) : filteredRequirements.length === 0 ? (
+          <p className="muted">No hay requerimientos que coincidan con el filtro.</p>
         ) : (
           <div className="manager-entity-table-wrapper">
             <table className="manager-entity-table">
@@ -73,7 +102,7 @@ const SiteCard = ({
                 </tr>
               </thead>
               <tbody>
-                {requirements.map((requirement) => {
+                {filteredRequirements.map((requirement) => {
                   const isExpanded = expandedRequirements.has(requirement.id)
                   return (
                     <Fragment key={requirement.id}>

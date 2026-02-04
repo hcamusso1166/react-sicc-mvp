@@ -264,7 +264,15 @@ const ManagerPage = () => {
         actionsClassName="manager-header-actions"
         actions={
           <>
-            <Button as={Link} to="/manager" variant="secondary">
+            <Button
+              as={Link}
+              to="/manager"
+              variant="secondary"
+              onClick={() => {
+                setCustomerSearch('')
+                setSiteSearch('')
+              }}
+            >
               Volver
             </Button>
             <Button
@@ -279,14 +287,16 @@ const ManagerPage = () => {
         }
       />
       <div className="manager-sites-header">
-        <h3>Sites</h3>
-        <SearchBar
-          value={siteSearch}
-          placeholder="Buscar sites..."
-          onChange={(value) => setSiteSearch(value)}
-          className="manager-sites-search"
-          aria-label="Buscar sites"
-        />
+        <div className="manager-sites-title">
+          <h3>Sites</h3>
+          <SearchBar
+            value={siteSearch}
+            placeholder="Buscar sites..."
+            onChange={(value) => setSiteSearch(value)}
+            className="manager-sites-search"
+            aria-label="Buscar sites"
+          />
+        </div>
       </div>
       {detailError && (
         <ErrorBanner>No se pudo cargar el detalle. {detailError}</ErrorBanner>

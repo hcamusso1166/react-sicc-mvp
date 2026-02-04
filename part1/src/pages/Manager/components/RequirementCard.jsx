@@ -29,6 +29,7 @@ const RequirementCard = ({
   const [createError, setCreateError] = useState('')
   const [createResult, setCreateResult] = useState(null)
   const [expandedProviders, setExpandedProviders] = useState(() => new Set())
+  const [providerSearch, setProviderSearch] = useState('')
 
   const providersWithoutDocs = useMemo(
     () =>
@@ -55,6 +56,21 @@ const RequirementCard = ({
       (vehiculo) => (documentosByVehiculo?.[vehiculo.id] || []).length === 0,
     )
   }, [providers, vehiculosByProvider, documentosByVehiculo])
+
+    const normalizedProviderSearch = providerSearch.trim().toLowerCase()
+  const filteredProviders = useMemo(() => {
+    if (!normalizedProviderSearch) return providers
+    return providers.filter((provider) => {
+      const name = getDisplayName(provider, 'Proveedor').toString().toLowerCase()
+      const cuit = (provider.CUIT || '').toString().toLowerCase()
+      const status = (provider.status || '').toString().toLowerCase()
+      return (
+        name.includes(normalizedProviderSearch) ||
+        cuit.includes(normalizedProviderSearch) ||
+        status.includes(normalizedProviderSearch)
+      )
+    })
+  }, [providers, normalizedProviderSearch, getDisplayName])
 
   const handleCreateDocuments = async () => {
     setCreatingDocs(true)
@@ -96,7 +112,18 @@ const RequirementCard = ({
     <div className="manager-requirement-card">
       <div className="manager-provider-section">
         <div className="manager-provider-header">
-          <span>Proveedores</span>
+          <div className="manager-provider-title">
+            <span>Proveedores</span>
+            <div className="manager-subcard-search">
+              <input
+                type="search"
+                placeholder="Buscar proveedores o CUIT"
+                value={providerSearch}
+                onChange={(event) => setProviderSearch(event.target.value)}
+                aria-label="Buscar proveedores o CUIT"
+              />
+            </div>
+          </div>
           <div className="manager-provider-header-actions">
             <Button
               type="button"
@@ -163,6 +190,8 @@ const RequirementCard = ({
         )}
         {providers.length === 0 ? (
           <p className="muted">No existen proveedores registrados.</p>
+        ) : filteredProviders.length === 0 ? (
+          <p className="muted">No hay proveedores que coincidan con el filtro.</p>
         ) : (
           <div className="manager-entity-table-wrapper">
             <table className="manager-entity-table">
@@ -175,7 +204,7 @@ const RequirementCard = ({
                 </tr>
               </thead>
               <tbody>
-                {providers.map((provider) => {
+                {filteredProviders.map((provider) => {
                   const isExpanded = expandedProviders.has(provider.id)
                   return (
                     <Fragment key={provider.id}>

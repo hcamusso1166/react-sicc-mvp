@@ -543,8 +543,6 @@ const ProviderCard = ({
                   ? '1 registrada'
                   : `${providerPersonas.length} registradas`}
               </span>
-            </div>    
-            <div className="manager-subcard-tools">
               <div className="manager-subcard-search">
                 <input
                   type="search"
@@ -554,6 +552,8 @@ const ProviderCard = ({
                   aria-label="Buscar personas o DNI"
                 />
               </div>
+            </div>
+            <div className="manager-subcard-actions">
               <Button
                 as={Link}
                 to="/clientes/proveedor/persona/nuevo"
@@ -648,8 +648,6 @@ const ProviderCard = ({
                   ? '1 registrado'
                   : `${providerVehiculos.length} registrados`}
               </span>
-            </div>
-            <div className="manager-subcard-tools">
               <div className="manager-subcard-search">
                 <input
                   type="search"
@@ -659,6 +657,8 @@ const ProviderCard = ({
                   aria-label="Buscar vehículos o dominio"
                 />
               </div>
+            </div>
+            <div className="manager-subcard-actions">
               <Button
                 as={Link}
                 to="/clientes/proveedor/vehiculo/nuevo"
