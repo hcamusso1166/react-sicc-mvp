@@ -23,6 +23,7 @@ const MENU_ITEMS = [
     to: '/reportes/documentos-verificados',
   },
   { label: 'Manager', to: '/manager' },
+  { label: 'Portada', to: '/portada' },
 ]
 
 const CUSTOMERS_PAGE_SIZE = 6

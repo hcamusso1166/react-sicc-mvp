@@ -17,6 +17,7 @@ import SuccessVehiculo from '../pages/CustomersSICC/SuccessVehiculo'
 import HomePage from '../pages/Home'
 import IntegralViewPage from '../pages/IntegralView'
 import ManagerPage from '../pages/Manager'
+import PortadaPage from '../pages/Portada'
 import DocumentosAVencerPage from '../pages/Reportes/DocumentosAVencer'
 import DocumentosVerificadosPage from '../pages/Reportes/DocumentosVerificados'
 
@@ -104,6 +105,7 @@ const AppRoutes = ({
       <Route path="/clientes/:id/editar" element={<EditCustomer />} />
       <Route path="/clientes/:id/borrar" element={<DeleteCustomer />} />
       <Route path="/manager" element={<ManagerPage />} />
+      <Route path="/portada" element={<PortadaPage />} />
       <Route
         path="/reportes/documentos-a-vencer"
         element={<DocumentosAVencerPage />}
