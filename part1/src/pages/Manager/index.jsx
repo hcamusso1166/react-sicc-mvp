@@ -195,6 +195,15 @@ const ManagerPage = () => {
     return groupBy(detail.documentos, (doc) => getRelationId(doc.idVehiculo))
   }, [detail])
 
+  const sites = detail?.sites ?? []
+  const filteredSites = useMemo(() => {
+    const normalizedSearch = normalizeValue(siteSearch)
+    if (!normalizedSearch) return sites
+    return sites.filter((site) =>
+      normalizeValue(getDisplayName(site, '')).includes(normalizedSearch),
+    )
+  }, [sites, siteSearch])
+
   if (!customerId) {
     return (
       <section className="manager-view">
@@ -237,14 +246,6 @@ const ManagerPage = () => {
   }
 
   const customer = detail?.customer
-  const sites = detail?.sites ?? []
-  const filteredSites = useMemo(() => {
-    const normalizedSearch = normalizeValue(siteSearch)
-    if (!normalizedSearch) return sites
-    return sites.filter((site) =>
-      normalizeValue(getDisplayName(site, '')).includes(normalizedSearch),
-    )
-  }, [sites, siteSearch])
 
   return (
     <section className="manager-view">
@@ -277,7 +278,7 @@ const ManagerPage = () => {
           </>
         }
       />
-            <div className="manager-sites-header">
+      <div className="manager-sites-header">
         <h3>Sites</h3>
         <SearchBar
           value={siteSearch}
@@ -296,7 +297,7 @@ const ManagerPage = () => {
           <p className="muted">Este cliente no tiene sites registrados.</p>
         </PanelCard>
       )}
-            {!detailLoading && sites.length > 0 && filteredSites.length === 0 && (
+      {!detailLoading && sites.length > 0 && filteredSites.length === 0 && (
         <PanelCard>
           <p className="muted">No hay sites que coincidan con el filtro.</p>
         </PanelCard>
