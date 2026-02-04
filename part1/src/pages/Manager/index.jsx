@@ -208,14 +208,23 @@ const ManagerPage = () => {
     return (
       <section className="manager-view">
         <PageHeader
-          title="Manager"
-          subtitle="Elegí un cliente para revisar el árbol completo de información."
-        />
-        <SearchBar
-          value={customerSearch}
-          placeholder="Buscar clientes..."
-          onChange={(value) => setCustomerSearch(value)}
-          className="manager-search"
+          title={
+            <div className="manager-title-row">
+              <h2>Manager</h2>
+              <span className="manager-title-subtitle muted">
+                Elegí un cliente para revisar el árbol completo de información.
+              </span>
+            </div>
+          }
+          actionsClassName="manager-header-actions"
+          actions={
+            <SearchBar
+              value={customerSearch}
+              placeholder="Buscar clientes..."
+              onChange={(value) => setCustomerSearch(value)}
+              className="manager-search"
+            />
+          }
         />
         {customersError && (
           <ErrorBanner>

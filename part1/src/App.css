@@ -492,6 +492,21 @@ body {
   max-width: 520px;
 }
 
+.manager-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0;
+}
+
+.manager-title-row h2 {
+  margin: 0;
+}
+
+.manager-title-subtitle {
+  font-size: 13px;
+}
+
 .manager-list {
   background: #fff;
   border-radius: 16px;
