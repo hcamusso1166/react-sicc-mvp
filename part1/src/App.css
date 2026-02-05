@@ -1204,6 +1204,7 @@ body {
 
 .portada-filters {
   min-height: auto;
+  margin: 0px 0px 6px;
 }
 
 .portada-filter-grid {
