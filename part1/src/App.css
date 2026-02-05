@@ -1236,7 +1236,7 @@ body {
 
 .portada-summary {
   display: grid;
-  gap: 12px;
+  gap: 6px;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   padding: 12px 14px;
   border-radius: 12px;
@@ -1251,19 +1251,19 @@ body {
 
 .portada-results {
   display: grid;
-  gap: 16px;
+  gap: 8px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .portada-panel {
   min-height: auto;
-  gap: 10px;
+  gap: 8px;
 }
 
 .portada-entity-list {
   display: grid;
-  gap: 8px;
-  
+  gap: 6px;
+
 }
 
 .portada-entity-card {
@@ -1272,13 +1272,13 @@ body {
   padding: 12px 14px;
   background: #f8fafc;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .portada-entity-header {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
 }
 
@@ -1297,7 +1297,7 @@ body {
 }
 
 .portada-empty {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
 }
 
 .portada-pill--authorized {

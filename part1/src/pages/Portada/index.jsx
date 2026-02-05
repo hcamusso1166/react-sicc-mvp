@@ -289,10 +289,6 @@ const PortadaPage = () => {
         title={
           <div className="portada-title">
             <h2>Portada</h2>
-            <span className="muted">
-              Consulta rápida de personas y vehículos autorizados por Cliente y
-              Site.
-            </span>
           </div>
         }
       />
@@ -332,7 +328,7 @@ const PortadaPage = () => {
         {selectedCustomerId && detail?.customer ? (
           <div className="portada-summary">
             <div>
-              <p className="muted">Cliente seleccionado</p>
+              <p className="muted">Cliente</p>
               <strong>{detail.customer.name}</strong>
             </div>
             <div>
