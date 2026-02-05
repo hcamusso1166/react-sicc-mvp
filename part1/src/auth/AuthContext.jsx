@@ -1,9 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import {
   clearStoredAuth,
   getStoredAuth,
   hasStoredAuth,
+  AUTH_CHANGED_EVENT,
   isTokenExpired,
 } from './authStorage'
 import { login as loginService, refresh as refreshService } from './authService'
@@ -24,7 +32,7 @@ const AuthProvider = ({ children }) => {
       try {
         await refreshService()
         setIsAuthenticated(true)
-      } catch (error) {
+      } catch {
         clearStoredAuth()
         setIsAuthenticated(false)
       } finally {
@@ -41,6 +49,17 @@ const AuthProvider = ({ children }) => {
     initializeSession()
   }, [initializeSession])
 
+    useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const syncAuthState = () => {
+      setIsAuthenticated(hasStoredAuth())
+    }
+
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuthState)
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, syncAuthState)
+  }, [])
+  
   const login = useCallback(async ({ email, password, signal }) => {
     const result = await loginService({ email, password, signal })
     setIsAuthenticated(true)

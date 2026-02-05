@@ -1226,7 +1226,7 @@ body {
 .portada-panel-header {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -1257,11 +1257,13 @@ body {
 
 .portada-panel {
   min-height: auto;
+  gap: 10px;
 }
 
 .portada-entity-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+  
 }
 
 .portada-entity-card {

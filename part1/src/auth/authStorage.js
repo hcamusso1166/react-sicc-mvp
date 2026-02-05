@@ -1,4 +1,10 @@
 const STORAGE_KEY = 'directus_auth'
+const AUTH_CHANGED_EVENT = 'directus-auth-changed'
+
+const notifyAuthChanged = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
+}
 
 const readStorage = () => {
   if (typeof window === 'undefined') return null
@@ -6,7 +12,7 @@ const readStorage = () => {
   if (!raw) return null
   try {
     return JSON.parse(raw)
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -42,11 +48,13 @@ const setStoredAuth = (payload) => {
   const normalized = normalizeAuthPayload(payload)
   if (!normalized) return null
   writeStorage(normalized)
+  notifyAuthChanged()
   return normalized
 }
 
 const clearStoredAuth = () => {
   clearStorage()
+  notifyAuthChanged()
 }
 
 const getAccessToken = () => readStorage()?.accessToken || ''
@@ -72,4 +80,5 @@ export {
   getRefreshToken,
   isTokenExpired,
   hasStoredAuth,
+  AUTH_CHANGED_EVENT,
 }

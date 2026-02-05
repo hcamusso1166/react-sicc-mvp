@@ -31,11 +31,30 @@ const DashboardLayout = ({
   children,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const handleMobileMenuClose = () => {
+    setIsMobileMenuOpen(false)
+  }
   const menuNodes = menuItems.map((item, index) => {
     const node = renderMenuItem(item, index)
     if (isValidElement(node) && node.key == null) {
       return cloneElement(node, {
         key: buildMenuItemKey(item, index),
+                onClick: (event) => {
+          node.props.onClick?.(event)
+          if (!event.defaultPrevented) {
+            handleMobileMenuClose()
+          }
+        },
+      })
+    }
+    if (isValidElement(node)) {
+      return cloneElement(node, {
+        onClick: (event) => {
+          node.props.onClick?.(event)
+          if (!event.defaultPrevented) {
+            handleMobileMenuClose()
+          }
+        },
       })
     }
     return node
@@ -72,7 +91,10 @@ const DashboardLayout = ({
             className={['sidebar-link', signOutClassName]
               .filter(Boolean)
               .join(' ')}
-            onClick={onSignOut}
+            onClick={() => {
+              onSignOut?.()
+              handleMobileMenuClose()
+            }}
           >
              {signOutLabel}
           </button>
