@@ -298,7 +298,6 @@ const PortadaPage = () => {
 
       <PanelCard className="portada-filters">
         <div className="panel-header">
-          <p className="muted">Site</p>
           {detailLoading ? (
             <span className="muted">Cargando datos...</span>
           ) : null}
