@@ -1118,6 +1118,9 @@ body {
   padding: 20px;
   z-index: 1;
 }
+.manager-modal__content--wide {
+  width: min(980px, 94vw);
+}
 
 .manager-modal__header {
   display: flex;
@@ -1139,6 +1142,28 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.manager-modal__body--split {
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.manager-modal__info p {
+  margin: 0 0 8px;
+}
+.manager-modal__preview {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  min-height: 480px;
+  overflow: hidden;
+}
+.manager-modal__pdf {
+  width: 100%;
+  min-height: 480px;
+  border: 0;
+  background: #fff;
 }
 
 .manager-modal__label {

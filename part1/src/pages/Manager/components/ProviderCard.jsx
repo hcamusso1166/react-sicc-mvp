@@ -8,6 +8,7 @@ import {
   updateProviderDocumentStatus,
   uploadDirectusFile,
 } from '../../../services/directus'
+import { DIRECTUS_PUBLIC_URL } from '../../../services/directusClient'
 
 const statusLabels = {
   toPresent: 'A Presentar',
@@ -138,6 +139,7 @@ const DocumentsSubcard = ({
   defaultCollapsed = true,
   onUploadDocument,
   onDeleteDocument,
+  onViewDocument,
 }) => {
   const documentsCount = documents.length
   const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(
@@ -281,10 +283,13 @@ const DocumentsSubcard = ({
 
                             const isUpload = action.key === 'upload'
                             const isDelete = action.key === 'delete'
+                            const isView = action.key === 'view'
                             const handler = isUpload
                               ? () => onUploadDocument?.(documento)
                               : isDelete
                                 ? () => onDeleteDocument?.(documento)
+                                : isView
+                                  ? () => onViewDocument?.(documento)
                                 : null
                             const isDisabled = !handler
                             return (
@@ -339,6 +344,7 @@ const ProviderCard = ({
   const [uploadTarget, setUploadTarget] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadError, setUploadError] = useState('')
+  const [viewTarget, setViewTarget] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [personaSearch, setPersonaSearch] = useState('')
@@ -365,11 +371,23 @@ const ProviderCard = ({
     setUploadError('')
     setIsUploading(false)
   }
+  const closeViewModal = () => setViewTarget(null)
 
   const openUploadModal = (documento) => {
     setUploadTarget(documento)
     setSelectedFile(null)
     setUploadError('')
+  }
+const openViewModal = (documento) => {
+    setViewTarget(documento || null)
+  }
+  const getDocumentFilePreviewUrl = (documento) => {
+    const archivo = documento?.archivo
+    const archivoId =
+      typeof archivo === 'object' && archivo !== null ? archivo.id : archivo
+    if (!archivoId) return ''
+    const base = DIRECTUS_PUBLIC_URL.replace(/\/$/, '')
+    return `${base}/assets/${archivoId}`
   }
 
   const handleFileChange = (event) => {
@@ -533,6 +551,7 @@ const ProviderCard = ({
           showActions
           onUploadDocument={openUploadModal}
           onDeleteDocument={handleDeleteDocument}
+          onViewDocument={openViewModal}
         />
         <div className="manager-subcard manager-subcard-group">
           <div className="manager-subcard-header manager-subcard-header--split">
@@ -810,6 +829,50 @@ const ProviderCard = ({
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {viewTarget && (
+        <div className="manager-modal">
+          <div className="manager-modal__backdrop" onClick={closeViewModal} />
+          <div
+            className="manager-modal__content manager-modal__content--wide"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="manager-modal__header">
+              <div>
+                <h4>{modalTitle}</h4>
+                <p className="muted">Documento presentado</p>
+              </div>
+              <button
+                type="button"
+                className="manager-modal__close"
+                onClick={closeViewModal}
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="manager-modal__body manager-modal__body--split">
+              <div className="manager-modal__info">
+                <p><strong>Documento:</strong> {getDocumentoName(viewTarget)}</p>
+                <p><strong>Estado:</strong> {getStatusLabel(viewTarget?.status)}</p>
+                <p><strong>Fecha Presentación:</strong> {formatDate(viewTarget?.fechaPresentacion)}</p>
+                <p><strong>Próxima Presentación:</strong> {formatDate(viewTarget?.proximaFechaPresentacion)}</p>
+              </div>
+              <div className="manager-modal__preview">
+                {getDocumentFilePreviewUrl(viewTarget) ? (
+                  <iframe
+                    title={`Vista previa de ${getDocumentoName(viewTarget)}`}
+                    src={getDocumentFilePreviewUrl(viewTarget)}
+                    className="manager-modal__pdf"
+                  />
+                ) : (
+                  <p className="muted">Este documento no tiene archivo PDF asociado.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
