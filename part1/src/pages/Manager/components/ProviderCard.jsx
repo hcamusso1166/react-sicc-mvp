@@ -4,6 +4,7 @@ import Button from '../../../components/Button'
 import StatusPill from '../../../components/StatusPill'
 import {
   getDirectusFileUploadUrl,
+  updateProviderDocument,
   updateProviderDocumentFile,
   updateProviderDocumentStatus,
   uploadDirectusFile,
@@ -140,6 +141,8 @@ const DocumentsSubcard = ({
   onUploadDocument,
   onDeleteDocument,
   onViewDocument,
+  onEditDocument,
+  onApproveDocument,
 }) => {
   const documentsCount = documents.length
   const [isDocumentsCollapsed, setIsDocumentsCollapsed] = useState(
@@ -284,13 +287,19 @@ const DocumentsSubcard = ({
                             const isUpload = action.key === 'upload'
                             const isDelete = action.key === 'delete'
                             const isView = action.key === 'view'
+                            const isEdit = action.key === 'edit'
+                            const isApprove = action.key === 'approve'
                             const handler = isUpload
                               ? () => onUploadDocument?.(documento)
                               : isDelete
                                 ? () => onDeleteDocument?.(documento)
-                                : isView
-                                  ? () => onViewDocument?.(documento)
-                                : null
+                              : isView
+                                ? () => onViewDocument?.(documento)
+                              : isEdit
+                                ? () => onEditDocument?.(documento)
+                              : isApprove
+                                ? () => onApproveDocument?.(documento)
+                              : null
                             const isDisabled = !handler
                             return (
                               <button
@@ -349,6 +358,16 @@ const ProviderCard = ({
   const [viewDocumentError, setViewDocumentError] = useState('')
   const [isLoadingViewDocument, setIsLoadingViewDocument] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [editTarget, setEditTarget] = useState(null)
+  const [editValues, setEditValues] = useState({
+    fechaPresentacion: '',
+    proximaFechaPresentacion: '',
+    validezDias: '',
+  })
+  const [editFile, setEditFile] = useState(null)
+  const [editError, setEditError] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [personaSearch, setPersonaSearch] = useState('')
   const [vehiculoSearch, setVehiculoSearch] = useState('')
@@ -378,6 +397,17 @@ const ProviderCard = ({
     setViewTarget(null)
     setViewDocumentError('')
   }
+  const closeEditModal = () => {
+    if (viewTarget?.id === editTarget?.id) {
+      setViewTarget(null)
+      setViewDocumentUrl('')
+      setViewDocumentError('')
+    }
+    setEditTarget(null)
+    setEditFile(null)
+    setEditError('')
+    setIsSavingEdit(false)
+  }
 
   const openUploadModal = (documento) => {
     setUploadTarget(documento)
@@ -386,6 +416,25 @@ const ProviderCard = ({
   }
 const openViewModal = (documento) => {
     setViewTarget(documento || null)
+  }
+  const openEditModal = (documento) => {
+    setViewTarget(documento || null)
+    setEditTarget(documento || null)
+    setEditValues({
+      fechaPresentacion: documento?.fechaPresentacion || '',
+      proximaFechaPresentacion: documento?.proximaFechaPresentacion || '',
+      validezDias: documento?.validezDias?.toString?.() || '',
+    })
+    setEditFile(null)
+    setEditError('')
+  }
+  const handleEditFieldChange = (field, value) => {
+    setEditValues((prev) => ({ ...prev, [field]: value }))
+  }
+  const handleEditFileChange = (event) => {
+    const file = event.target.files?.[0]
+    setEditFile(file || null)
+    setEditError('')
   }
   const getDocumentFileId = (documento) => {
     const archivo = documento?.archivo
@@ -502,6 +551,58 @@ const openViewModal = (documento) => {
       setIsDeleting(false)
     }
   }
+
+  const handleApproveDocument = async (documento) => {
+    setIsApproving(true)
+    setUploadError('')
+    try {
+      await updateProviderDocumentStatus({
+        documentoId: documento.id,
+        status: 'approved',
+      })
+      if (onDocumentsUpdated) await onDocumentsUpdated()
+    } catch (error) {
+      setUploadError(error.message)
+    } finally {
+      setIsApproving(false)
+    }
+  }
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault()
+    if (!editTarget) return
+    if (editFile && editFile.type !== 'application/pdf') {
+      setEditError('Solo se permiten archivos PDF.')
+      return
+    }
+    setIsSavingEdit(true)
+    setEditError('')
+    try {
+      let archivoId = getDocumentFileId(editTarget)
+      if (editFile) {
+        const uploaded = await uploadDirectusFile(editFile)
+        archivoId = uploaded?.data?.id
+        if (!archivoId) throw new Error('No se recibió el identificador del archivo.')
+      }
+      const payload = {
+        status: 'presented',
+        archivo: archivoId || null,
+        fechaPresentacion: editValues.fechaPresentacion || null,
+        proximaFechaPresentacion: editValues.proximaFechaPresentacion || null,
+        validezDias:
+          editValues.validezDias === ''
+            ? null
+            : Number(editValues.validezDias),
+      }
+      await updateProviderDocument({ documentoId: editTarget.id, payload })
+      closeEditModal()
+      if (onDocumentsUpdated) await onDocumentsUpdated()
+    } catch (error) {
+      setEditError(error.message || 'No se pudo editar el documento.')
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
   const normalizedPersonaSearch = normalizeSearchValue(personaSearch)
   const normalizedVehiculoSearch = normalizeSearchValue(vehiculoSearch)
 
@@ -601,6 +702,8 @@ const openViewModal = (documento) => {
           onUploadDocument={openUploadModal}
           onDeleteDocument={handleDeleteDocument}
           onViewDocument={openViewModal}
+          onEditDocument={openEditModal}
+          onApproveDocument={handleApproveDocument}
         />
         <div className="manager-subcard manager-subcard-group">
           <div className="manager-subcard-header manager-subcard-header--split">
@@ -936,9 +1039,55 @@ const openViewModal = (documento) => {
           </div>
         </div>
       )}
-      {isDeleting && (
+      {editTarget && (
+        <div className="manager-modal">
+          <div className="manager-modal__backdrop" onClick={closeEditModal} />
+          <div className="manager-modal__content manager-modal__content--wide" role="dialog" aria-modal="true">
+            <div className="manager-modal__header">
+              <div>
+                <h4>{modalTitle}</h4>
+                <p className="muted">Editar documento presentado</p>
+              </div>
+              <button type="button" className="manager-modal__close" onClick={closeEditModal} aria-label="Cerrar">✕</button>
+            </div>
+            <form className="manager-modal__body manager-modal__body--split" onSubmit={handleEditSubmit}>
+              <div className="manager-modal__info manager-modal__form-grid">
+                <p><strong>Documento:</strong> {getDocumentoName(editTarget)}</p>
+                <label className="manager-modal__label" htmlFor={`edit-fecha-${editTarget.id}`}>Fecha presentación</label>
+                <input id={`edit-fecha-${editTarget.id}`} type="date" value={editValues.fechaPresentacion} onChange={(event) => handleEditFieldChange('fechaPresentacion', event.target.value)} />
+                <label className="manager-modal__label" htmlFor={`edit-proxima-${editTarget.id}`}>Próxima presentación</label>
+                <input id={`edit-proxima-${editTarget.id}`} type="date" value={editValues.proximaFechaPresentacion} onChange={(event) => handleEditFieldChange('proximaFechaPresentacion', event.target.value)} />
+                <label className="manager-modal__label" htmlFor={`edit-validez-${editTarget.id}`}>Validez (días)</label>
+                <input id={`edit-validez-${editTarget.id}`} type="number" min="0" value={editValues.validezDias} onChange={(event) => handleEditFieldChange('validezDias', event.target.value)} />
+                <label className="manager-modal__label" htmlFor={`edit-file-${editTarget.id}`}>Reemplazar PDF</label>
+                <input id={`edit-file-${editTarget.id}`} type="file" accept="application/pdf" onChange={handleEditFileChange} />
+                {editFile && <p className="muted">Nuevo archivo: {editFile.name}</p>}
+                {editError && <p className="manager-modal__error">{editError}</p>}
+                <div className="manager-modal__actions">
+                  <Button type="button" variant="secondary" onClick={closeEditModal} disabled={isSavingEdit}>Cancelar</Button>
+                  <Button type="submit" variant="primary" disabled={isSavingEdit}>{isSavingEdit ? 'Guardando...' : 'Guardar cambios'}</Button>
+                </div>
+              </div>
+              <div className="manager-modal__preview">
+                {isLoadingViewDocument && editTarget?.id === viewTarget?.id && <p className="muted">Cargando documento...</p>}
+                {!viewDocumentError && viewDocumentUrl && editTarget?.id === viewTarget?.id ? (
+                  <iframe title={`Vista previa de ${getDocumentoName(editTarget)}`} src={viewDocumentUrl} className="manager-modal__pdf" />
+                ) : (
+                  <p className="muted">Usá Visualizar para previsualizar el PDF actual.</p>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+            {isDeleting && (
         <p className="muted manager-documents-feedback">
           Archivando documento...
+        </p>
+      )}
+      {isApproving && (
+        <p className="muted manager-documents-feedback">
+          Aprobando documento...
         </p>
       )}
     </div>

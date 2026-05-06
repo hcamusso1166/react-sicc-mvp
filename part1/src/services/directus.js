@@ -118,6 +118,14 @@ const updateProviderDocumentStatus = async ({
   return response?.data
 }
 
+const updateProviderDocument = async ({ documentoId, payload }) => {
+  const response = await patchJSON(
+    `${API_BASE}/items/${TABLES.documentos}/${documentoId}`,
+    payload,
+  )
+  return response?.data
+}
+
 const fetchTableCount = (table, options = {}) => {
   const { cacheBust, ...fetchOptions } = options
   return fetchJSON(
@@ -851,4 +859,5 @@ export {
   getDirectusFileUploadUrl,
   updateProviderDocumentFile,
   updateProviderDocumentStatus,
+  updateProviderDocument,
 }

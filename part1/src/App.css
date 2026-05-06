@@ -1170,6 +1170,21 @@ body {
   font-weight: 600;
   color: #0f172a;
 }
+.manager-modal__form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.manager-modal__form-grid input[type='date'],
+.manager-modal__form-grid input[type='number'],
+.manager-modal__form-grid input[type='file'] {
+  width: 100%;
+  border: 1px solid #d7deea;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+  color: #1f2a44;
+}
 
 .manager-modal__actions {
   display: flex;
