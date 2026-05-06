@@ -8,7 +8,7 @@ import {
   updateProviderDocumentStatus,
   uploadDirectusFile,
 } from '../../../services/directus'
-import { DIRECTUS_PUBLIC_URL } from '../../../services/directusClient'
+import { request } from '../../../services/directusClient'
 
 const statusLabels = {
   toPresent: 'A Presentar',
@@ -345,6 +345,9 @@ const ProviderCard = ({
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadError, setUploadError] = useState('')
   const [viewTarget, setViewTarget] = useState(null)
+  const [viewDocumentUrl, setViewDocumentUrl] = useState('')
+  const [viewDocumentError, setViewDocumentError] = useState('')
+  const [isLoadingViewDocument, setIsLoadingViewDocument] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [personaSearch, setPersonaSearch] = useState('')
@@ -371,7 +374,10 @@ const ProviderCard = ({
     setUploadError('')
     setIsUploading(false)
   }
-  const closeViewModal = () => setViewTarget(null)
+  const closeViewModal = () => {
+    setViewTarget(null)
+    setViewDocumentError('')
+  }
 
   const openUploadModal = (documento) => {
     setUploadTarget(documento)
@@ -381,14 +387,57 @@ const ProviderCard = ({
 const openViewModal = (documento) => {
     setViewTarget(documento || null)
   }
-  const getDocumentFilePreviewUrl = (documento) => {
+  const getDocumentFileId = (documento) => {
     const archivo = documento?.archivo
-    const archivoId =
-      typeof archivo === 'object' && archivo !== null ? archivo.id : archivo
-    if (!archivoId) return ''
-    const base = DIRECTUS_PUBLIC_URL.replace(/\/$/, '')
-    return `${base}/assets/${archivoId}`
+    return typeof archivo === 'object' && archivo !== null ? archivo.id : archivo
   }
+
+  useEffect(() => {
+    let objectUrl = ''
+    const controller = new AbortController()
+
+    const loadViewDocument = async () => {
+      const archivoId = getDocumentFileId(viewTarget)
+      if (!viewTarget || !archivoId) {
+        setViewDocumentUrl('')
+        setViewDocumentError('')
+        setIsLoadingViewDocument(false)
+        return
+      }
+
+      setIsLoadingViewDocument(true)
+      setViewDocumentError('')
+      setViewDocumentUrl('')
+
+      try {
+        const response = await request(`/assets/${archivoId}`, {
+          signal: controller.signal,
+        })
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el PDF del documento.')
+        }
+        const blob = await response.blob()
+        objectUrl = URL.createObjectURL(blob)
+        setViewDocumentUrl(objectUrl)
+      } catch (error) {
+        if (controller.signal.aborted) return
+        setViewDocumentError(error.message || 'No se pudo cargar el PDF.')
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingViewDocument(false)
+        }
+      }
+    }
+
+    loadViewDocument()
+
+    return () => {
+      controller.abort()
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [viewTarget])
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0]
@@ -862,14 +911,25 @@ const openViewModal = (documento) => {
                 <p><strong>Próxima Presentación:</strong> {formatDate(viewTarget?.proximaFechaPresentacion)}</p>
               </div>
               <div className="manager-modal__preview">
-                {getDocumentFilePreviewUrl(viewTarget) ? (
+                {isLoadingViewDocument && (
+                  <p className="muted">Cargando documento...</p>
+                )}
+                {!isLoadingViewDocument && viewDocumentError && (
+                  <p className="manager-modal__error">{viewDocumentError}</p>
+                )}
+                {!isLoadingViewDocument && !viewDocumentError && viewDocumentUrl ? (
                   <iframe
                     title={`Vista previa de ${getDocumentoName(viewTarget)}`}
-                    src={getDocumentFilePreviewUrl(viewTarget)}
+                    src={viewDocumentUrl}
                     className="manager-modal__pdf"
                   />
                 ) : (
-                  <p className="muted">Este documento no tiene archivo PDF asociado.</p>
+                  !isLoadingViewDocument &&
+                  !viewDocumentError && (
+                    <p className="muted">
+                      Este documento no tiene archivo PDF asociado.
+                    </p>
+                  )
                 )}
               </div>
             </div>
